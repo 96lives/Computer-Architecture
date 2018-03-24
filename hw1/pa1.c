@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "pa1.h"
 
+
 typedef unsigned char tinyfp;
 
 // changes tf's nth bit to 1
@@ -115,18 +116,94 @@ tinyfp int2tinyfp(int x){
     return tf;
 }
 
+float power(float n , int m) {
 
-int tinyfp2int(tinyfp x)
-{
+    if (m == 0)
+        return 1;
 
+    if (m < 0) {
+        m = -m;
+        n = 1 / n;
+    }
+    float result = n;
 
+    for (int i = 0; i < m - 1; ++i)
+        result *= n;
 
-	return 9;
+    return result;
 }
 
 
-tinyfp float2tinyfp(float x)
-{
+int getSign(tinyfp tf) {
+
+    if (tf == (tf | 0b10000000))
+        return 1;
+    return 0;
+}
+
+int* getExp(tinyfp tf) {
+
+    int * exp = (int*)malloc(sizeof(int) * 4);
+    exp[3] = 0, exp[2] = 0, exp[1] = 0, exp[0] = 0;
+
+    if (tf == (tf | 0b01000000))
+        exp[3] = 1;
+    if (tf == (tf | 0b00100000))
+        exp[2] = 1;
+    if (tf == (tf | 0b00010000))
+        exp[1] = 1;
+    if (tf == (tf | 0b00001000))
+        exp[0] = 1;
+    return exp;
+}
+
+int* getFrac(tinyfp tf) {
+
+    int * frac = (int*)malloc(sizeof(int) * 3);
+    frac[2] = 0, frac[1] = 0, frac[0] = 0;
+
+    if (tf == (tf | 0b00000100))
+        frac[2] = 1;
+    if (tf == (tf | 0b00000010))
+        frac[1] = 1;
+    if (tf == (tf | 0b00000001))
+        frac[0] = 1;
+    return frac;
+}
+
+
+int tinyfp2int(tinyfp x) {
+    int sign = getSign(x);
+    int *exp = getExp(x);
+    int *frac = getFrac(x);
+
+    // +-inf or +-nan
+    if (exp[3] == 1 && exp[2] == 1 && exp[1] == 1 && exp[0] == 1)
+        return -2147483648;
+
+    // calculate int
+    int newExp = -7;
+    for (int i = 0; i < 4; ++i) {
+        if (exp[i])
+            newExp += power(2, i);
+    }
+
+    float newFrac = 1;
+    for (int i = 0; i < 3; ++i) {
+        if (frac[i])
+            newFrac += power(2, i - 3);
+    }
+
+    int result = (int) (newFrac * power(2, newExp));
+
+    if(sign)
+        result = -result;
+
+    return result;
+}
+
+
+tinyfp float2tinyfp(float x) {
 
 
 
