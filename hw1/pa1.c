@@ -292,10 +292,42 @@ tinyfp float2tinyfp(float x) {
 
 }
 
-float tinyfp2float(tinyfp x)
-{
+float tinyfp2float(tinyfp x) {
+
+    int sign = getSign(x);
+    int* exp = getExp(x);
+    int* frac = getFrac(x);
+
+    if (x == 0b01111100) // check nan
+        return 0.0 / 0;
+    else if (x == 0b01111000) // check +inf
+        return 1.0 / 0;
+    else if (x == 0b11111000) // check -inf
+        return -1.0 / 0;
 
 
+    int newExp = -7;
+    for (int i = 0; i < 4; ++i) {
+        if (exp[i])
+            newExp += power(2, i);
+    }
 
-	return 9.9;
+    float newFrac = 1;
+
+    if ((!exp[3]) && (!exp[2]) && (!exp[1]) && (!exp[0])) {
+        newExp = -6;
+        newFrac = 0;
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        if (frac[i])
+            newFrac += power(2, i - 3);
+    }
+
+    float result = newFrac * power(2, newExp);
+
+    if(sign)
+        result = -result;
+
+    return result;
 }
