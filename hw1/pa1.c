@@ -202,14 +202,95 @@ int tinyfp2int(tinyfp x) {
     return result;
 }
 
+// get fraction values for 0 <= floats < 1
+int* getFrac01(float x) {
+    int* result = (int*) malloc(sizeof(int) * 3);
+    result[2] = 0, result[1] = 0, result[0] = 0;
+
+    if (0.5 <= x) {
+        result[2] = 1;
+        x = x - 0.5;
+    }
+    if (0.25 <= x) {
+        result[1] = 1;
+        x = x - 0.25;
+    }
+    if (0.125 <= x)
+        result[0] = 1;
+
+    return result;
+}
+
+
 
 tinyfp float2tinyfp(float x) {
 
+    // check nan
+    if (x != x) {
+        return 0b01111100;
+    }
+
+    int sign = 0;
+    if (x < 0) {
+        sign = 1;
+        x = -x;
+    }
+
+    // check if is in range
+    if (x > 240) {
+        if (sign)
+            return 0b11111000;
+        return 0b01111000;
+    }
+
+    int cnt = 7;
+
+    if (x >= 1) {
+        while (x > 2) {
+            x = x / 2;
+            cnt++;
+        }
+    }
+    else if (x >= 0.017578125) {
+        while (x >= 1) {
+            x = x * 2;
+            cnt--;
+        }
+    }
+    else {
+        // denormalized form
+        cnt = 0;
+        x = x * power(2, 6);
+    }
+
+    // 1 <= x < 2
+    if (x >= 1)
+        x = x - 1;
 
 
-	return 9;
+    // now x is [0, 1)
+    // get fraction part
+    int *frac = getFrac01(x);
+    int *exp = decToBin(cnt);
+
+    tinyfp tf = 0b00000000;
+    if (sign)
+        tf = nthBitToOne(tf, 7);
+
+    for (int i = 0; i < 4; ++i) {
+        if (exp[i])
+            tf = nthBitToOne(tf, i + 3);
+    }
+
+
+    for (int i = 0; i < 3; ++i) {
+        if (frac[i])
+            tf = nthBitToOne(tf, i);
+    }
+
+    return tf;
+
 }
-
 
 float tinyfp2float(tinyfp x)
 {

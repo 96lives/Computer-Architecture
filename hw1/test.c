@@ -15,8 +15,18 @@
   							(byte & 0x01 ? '1' : '0')
 #define PRINT_TINYFP(t)		printf("tinyfp("BYTE_FORMAT"), ", BYTE_TO_BITS(t));
 
+typedef unsigned char tinyfp;
 
-double power(double n , int m) {
+int* decToBin(int n) {
+    int *result = (int*) malloc(sizeof(int) * 4);
+    for (int i = 0; i < 4; ++i) {
+        result[i] = (n % 2);
+        n = n / 2;
+    }
+    return result;
+}
+
+float power(float n , int m) {
 
     if (m == 0)
         return 1;
@@ -25,90 +35,138 @@ double power(double n , int m) {
         m = -m;
         n = 1 / n;
     }
-    double result = n;
+    float result = n;
+
     for (int i = 0; i < m - 1; ++i)
         result *= n;
 
     return result;
 }
 
-typedef unsigned char tinyfp;
+tinyfp nthBitToOne(tinyfp tf, int n) {
 
-
-int getSign(tinyfp tf) {
-
-    if (tf == (tf | 0b10000000))
-        return 1;
-    return 0;
-}
-
-int* getExp(tinyfp tf) {
-
-    int * exp = (int*)malloc(sizeof(int) * 4);
-    exp[3] = 0, exp[2] = 0, exp[1] = 0, exp[0] = 0;
-
-    if (tf == (tf | 0b01000000))
-        exp[3] = 1;
-    if (tf == (tf | 0b00100000))
-        exp[2] = 1;
-    if (tf == (tf | 0b00010000))
-        exp[1] = 1;
-    if (tf == (tf | 0b00001000))
-        exp[0] = 1;
-    return exp;
-}
-
-int* getFrac(tinyfp tf) {
-
-    int * frac = (int*)malloc(sizeof(int) * 3);
-    frac[2] = 0, frac[1] = 0, frac[0] = 0;
-
-    if (tf == (tf | 0b00000100))
-        frac[2] = 1;
-    if (tf == (tf | 0b00000010))
-        frac[1] = 1;
-    if (tf == (tf | 0b00010001))
-        frac[0] = 1;
-    return frac;
-}
-
-
-int tinyfp2int(tinyfp x) {
-    int sign = getSign(x);
-    int *exp = getExp(x);
-    int *frac = getFrac(x);
-
-    // +-inf or +-nan
-    if (exp[3] == 1 && exp[2] == 1 && exp[1] == 1 && exp[0] == 1)
-        return -2147483648;
-
-    // calculate int
-    int newExp = -7;
-    for (int i = 0; i < 4; ++i) {
-        if (exp[i])
-            newExp += power(2, i);
+    switch (n) {
+        case 0 :
+            tf = tf | 0b00000001;
+            break;
+        case 1:
+            tf = tf | 0b00000010;
+            break;
+        case 2:
+            tf = tf | 0b00000100;
+            break;
+        case 3:
+            tf = tf | 0b00001000;
+            break;
+        case 4:
+            tf = tf | 0b00010000;
+            break;
+        case 5:
+            tf = tf | 0b00100000;
+            break;
+        case 6:
+            tf = tf | 0b01000000;
+            break;
+        case 7:
+            tf = tf | 0b10000000;
+            break;
     }
-    printf("newExp: %d\n", newExp);
+    return tf;
 
-    double newFrac = 1;
-    for (int i = 0; i < 3; ++i) {
-        printf("i: %d, frac: %d\n", i, frac[i]);
-        if (frac[i])
-            newFrac += power(2, i - 3);
+}
+
+
+// get fraction values for 0 <= floats < 1
+int* getFrac01(float x) {
+    int* result = (int*) malloc(sizeof(int) * 3);
+    result[2] = 0, result[1] = 0, result[0] = 0;
+
+    if (0.5 <= x) {
+        result[2] = 1;
+        x = x - 0.5;
     }
-    printf("newFrac: %f\n", newFrac);
-
-    int result = (int) (newFrac * power(2, newExp));
-
-    if(sign)
-        result = -result;
+    if (0.25 <= x) {
+        result[1] = 1;
+        x = x - 0.25;
+    }
+    if (0.125 <= x)
+        result[0] = 1;
 
     return result;
 }
 
-int main(void) {
 
-    printf("%lf\n", power(2, -3));
-    tinyfp tf = 0b01010101;
-    printf("result: %d\n", tinyfp2int(tf));
+
+tinyfp float2tinyfp(float x) {
+
+    // check nan
+    if (x != x) {
+        return 0b01111100;
+    }
+
+    int sign = 0;
+    if (x < 0) {
+        sign = 1;
+        x = -x;
+    }
+
+    // check if is in range
+    if (x > 240) {
+        if (sign)
+            return 0b11111000;
+        return 0b01111000;
+    }
+
+    int cnt = 7;
+
+    if (x >= 1) {
+        while (x > 2) {
+            x = x / 2;
+            cnt++;
+        }
+    }
+    else if (x >= 0.017578125) {
+        while (x >= 1) {
+            x = x * 2;
+            cnt--;
+        }
+    }
+    else {
+        // denormalized form
+        cnt = 0;
+        x = x * power(2, 6);
+    }
+
+    // 1 <= x < 2
+    if (x >= 1)
+        x = x - 1;
+
+
+    // now x is [0, 1)
+    // get fraction part
+    int *frac = getFrac01(x);
+    int *exp = decToBin(cnt);
+
+    tinyfp tf = 0b00000000;
+    if (sign)
+        tf = nthBitToOne(tf, 7);
+
+    for (int i = 0; i < 4; ++i) {
+        if (exp[i])
+            tf = nthBitToOne(tf, i + 3);
+    }
+
+
+    for (int i = 0; i < 3; ++i) {
+        if (frac[i])
+            tf = nthBitToOne(tf, i);
+    }
+
+    return tf;
+
+}
+
+int main(void) {
+    float x = 314.0;
+    PRINT_TINYFP(float2tinyfp(x));
 };
