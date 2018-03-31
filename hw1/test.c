@@ -12,17 +12,35 @@
   							(byte & 0x04 ? '1' : '0'), \
   							(byte & 0x02 ? '1' : '0'), \
   							(byte & 0x01 ? '1' : '0')
+
+#define PRINT_WORD(s,i)		printf(s"("BYTE_FORMAT" ", BYTE_TO_BITS((i) >> 24));	\
+							printf(BYTE_FORMAT" ", BYTE_TO_BITS((i) >> 16)); 		\
+							printf(BYTE_FORMAT" ", BYTE_TO_BITS((i) >> 8)); 		\
+							printf(BYTE_FORMAT") => ", BYTE_TO_BITS(i));
+#define PRINT_INT(i)		PRINT_WORD("int", i)
+#define PRINT_FLOAT(i)		PRINT_WORD("float", i)
 #define PRINT_TINYFP(t)		printf("tinyfp("BYTE_FORMAT"), ", BYTE_TO_BITS(t));
+
+#define TINYFP_INF_NAN(t)	((((t) >> 3) & 0x0f) == 0x0f)
+#define FLOAT_INF_NAN(f)	((((f) >> 23) & 0xff) == 0xff)
+#define TEST_INF_NAN(f,t)	(TINYFP_INF_NAN(t) && FLOAT_INF_NAN(f) && 				\
+							((((t) >> 7) == (f) >> 31) && 							\
+							(((((t) & 0x07) == 0) && (((f) & 0x007fffff) == 0)) || 	\
+							((((t) & 0x07) > 0) && (((f) & 0x007fffff) > 0)))))
+
+#define CHECK_VALUE(r,a)	printf("%s\n", ((r) == (a))? "CORRECT" : "WRONG")
+#define CHECK_INF_NAN(f,t)	printf("%s\n", TEST_INF_NAN(f,t)? "CORRECT" : "WRONG")
+
+#define N 	6
 
 typedef unsigned char tinyfp;
 
 union Data {
     float f;
-    int i;
-    tinyfp tf[4];
+    unsigned int i;
+    tinyfp tf;
 };
 
-/*
 tinyfp float2tinyfp(float x) {
 
     // check out of range or +-inf
@@ -34,60 +52,74 @@ tinyfp float2tinyfp(float x) {
     }
 
     // check +-nan
-    if (x == 0.0/0.0) {
-        return 0b01111100;
-    }
-    else if (x == -(0.0/0.0)) {
+    if (x != x) {
+        if (x < 0)
+            return 0b01111100;
         return 0b11111100;
     }
 
     // check sign
     tinyfp result;
-    union Data d;
 
-    if (x >= 0) {
+    if (x >= 0)
         result = 0b00000000;
-        d.f = x;
-    }
     else {
         result = 0b10000000;
-        d.f = -x;
+        x = -x;
     }
-
 
 
     // check denormalized
     if (x < 0.015625) {
-        printf("denorm\n");
-        union Data frac;
-        frac.i = d.i;
-        //get frac
-        frac.i = frac.i << 9; // 23 -> 32
-        printf("%d\n", frac.i);
-        frac.i = frac.i >> 29; // 32 -> 3
-        printf("%d\n", frac.i);
-        result = result | frac.tf;
+        float sd = 0.001953125;
+        if (x < sd)
+            result = result | 0b00000000;
+        else if (x < 2 * sd)
+            result = result | 0b00000001;
+        else if (x < 3 * sd)
+            result = result | 0b00000010;
+        else if (x < 4 * sd)
+            result = result | 0b00000011;
+        else if (x < 5 * sd)
+            result = result | 0b00000100;
+        else if (x < 6 * sd)
+            result = result | 0b00000101;
+        else if (x < 7 * sd)
+            result = result | 0b00000110;
+        else
+            result = result | 0b00000111;
     }
     else {
-        printf("norm\n");
+        union Data d;
+        d.f = x;
+        union Data exp;
+        unsigned int bias_diff = 127 - 7;
+        exp.i = d.i;
+        exp.i = (exp.i << 1) >> 24;
+        exp.i = exp.i - bias_diff;
+        printf("bias: %d\n", exp.i);
+        exp.i = exp.i << 3;
+        result = result | exp.tf;
 
-        //get exp
-        unsigned int exp = d.i;
-        unsigned int frac = d.i;
-        exp = ((exp << 1) >> 28) << 3;
-        frac = (frac << 9) >> 29;
-        result = result | exp;
-        result = result | frac;
+        union Data frac;
+        frac.f = x;
+        frac.i = (frac.i << 9) >> 29;
+        PRINT_FLOAT(frac.f);
+        result = result | frac.tf;
+
     }
     return result;
-
 }
 
- */
 
 int main(void) {
-    union Data d;
-    d.f = 0.001953125;
-    PRINT_TINYFP(d.tf[3]);
+    /*
+     * float float_literal[N] = {0.001953125, 0.000732421875, -12.345, 1.6, -0.0/0.0, 314.0};
+tinyfp float2tinyfpAnswer[N] = {0b00000001, 0b00000000, 0b11010100, 0b00111100, 0b11111001, 0b01111000};
+
+     */
+    float x = 1.6;
+    printf("%f\n", x);
+    PRINT_TINYFP(float2tinyfp(x));
 
 };
