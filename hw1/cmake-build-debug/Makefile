@@ -123,60 +123,6 @@ hw1/fast:
 	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/build
 .PHONY : hw1/fast
 
-pa1-test.o: pa1-test.c.o
-
-.PHONY : pa1-test.o
-
-# target to build an object file
-pa1-test.c.o:
-	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/pa1-test.c.o
-.PHONY : pa1-test.c.o
-
-pa1-test.i: pa1-test.c.i
-
-.PHONY : pa1-test.i
-
-# target to preprocess a source file
-pa1-test.c.i:
-	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/pa1-test.c.i
-.PHONY : pa1-test.c.i
-
-pa1-test.s: pa1-test.c.s
-
-.PHONY : pa1-test.s
-
-# target to generate assembly for a file
-pa1-test.c.s:
-	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/pa1-test.c.s
-.PHONY : pa1-test.c.s
-
-pa1.o: pa1.c.o
-
-.PHONY : pa1.o
-
-# target to build an object file
-pa1.c.o:
-	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/pa1.c.o
-.PHONY : pa1.c.o
-
-pa1.i: pa1.c.i
-
-.PHONY : pa1.i
-
-# target to preprocess a source file
-pa1.c.i:
-	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/pa1.c.i
-.PHONY : pa1.c.i
-
-pa1.s: pa1.c.s
-
-.PHONY : pa1.s
-
-# target to generate assembly for a file
-pa1.c.s:
-	$(MAKE) -f CMakeFiles/hw1.dir/build.make CMakeFiles/hw1.dir/pa1.c.s
-.PHONY : pa1.c.s
-
 test.o: test.c.o
 
 .PHONY : test.o
@@ -213,12 +159,6 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... hw1"
-	@echo "... pa1-test.o"
-	@echo "... pa1-test.i"
-	@echo "... pa1-test.s"
-	@echo "... pa1.o"
-	@echo "... pa1.i"
-	@echo "... pa1.s"
 	@echo "... test.o"
 	@echo "... test.i"
 	@echo "... test.s"

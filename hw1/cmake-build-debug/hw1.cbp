@@ -84,15 +84,6 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1-test.c">
-			<Option target="hw1"/>
-		</Unit>
-		<Unit filename="/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1.c">
-			<Option target="hw1"/>
-		</Unit>
-		<Unit filename="/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1.h">
-			<Option target="hw1"/>
-		</Unit>
 		<Unit filename="/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/test.c">
 			<Option target="hw1"/>
 		</Unit>

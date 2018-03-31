@@ -6,20 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1-test.c
-stdio.h
--
-pa1.h
-/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1.h
-
-/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1.c
-stdlib.h
--
-pa1.h
-/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1.h
-
-/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/pa1.h
-
 /home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/test.c
 stdio.h
 -

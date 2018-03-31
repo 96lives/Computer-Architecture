@@ -56,7 +56,7 @@ tinyfp float2tinyfpAnswer[N] = {0b00000001, 0b00000000, 0b11010100, 0b00111100, 
 
 
 tinyfp tinyfp_literal2[N] = {0b00000010, 0b00010000, 0b11101010, 0b10000000, 0b01111000, 0b11111100};
-float tinyfp2floatAnswer[N] = {0.00390625, 0.03125, -80.0, -0.0, 1.0/0.0, 0.0}; 
+float tinyfp2floatAnswer[N] = {0.00390625, 0.03125, -80.0, -0.0, 1.0/0, 0.0/0.0};
 
 int main(void){
 	int idx;

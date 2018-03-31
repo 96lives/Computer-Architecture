@@ -227,7 +227,9 @@ tinyfp float2tinyfp(float x) {
 
     // check nan
     if (x != x) {
-        return 0b01111100;
+        if (x > 0)
+            return 0b01111001;
+        return 0b11111001;
     }
 
     int sign = 0;
@@ -298,12 +300,16 @@ float tinyfp2float(tinyfp x) {
     int* exp = getExp(x);
     int* frac = getFrac(x);
 
-    if (x == 0b01111100) // check nan
-        return 0.0 / 0;
-    else if (x == 0b01111000) // check +inf
-        return 1.0 / 0;
-    else if (x == 0b11111000) // check -inf
-        return -1.0 / 0;
+    if (exp[0] == 1 && exp[1] == 1 && exp[2] == 1 && exp[3] == 1) { // check nan
+        if (sign) {
+            if (x == 0b11111000)
+                return -1.0 / 0.0;
+            return 0.0 / 0.0;
+        }
+        if (x == 0b01111000)
+            return 1.0 / 0.0;
+        return -(0.0 / 0.0);   //wrong result
+    }
 
 
     int newExp = -7;

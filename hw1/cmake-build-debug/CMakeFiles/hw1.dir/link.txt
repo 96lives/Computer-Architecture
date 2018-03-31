@@ -1,1 +1,1 @@
-/usr/bin/cc -g   CMakeFiles/hw1.dir/pa1-test.c.o CMakeFiles/hw1.dir/pa1.c.o CMakeFiles/hw1.dir/test.c.o  -o hw1 
+/usr/bin/cc -g   CMakeFiles/hw1.dir/test.c.o  -o hw1 
