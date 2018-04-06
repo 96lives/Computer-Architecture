@@ -92,8 +92,9 @@ int gt(tinyfp tf1, tinyfp tf2) {
         tf2 = tf2 | 0b10000000;
     else
         tf2 = tf2 & 0b01111111;
-
-    return (add(tf1, tf2) >> 7);
+    if (add(tf1, tf2) >> 7)
+        return 0;
+    return 1;
 }
 
 
@@ -101,7 +102,65 @@ tinyfp add(tinyfp tf1, tinyfp tf2){
 	return 9;
 }
 
+union Data {
+    unsigned int ui;
+    tinyfp tf;
+};
+
+tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
+
+    tinyfp f1 = tf1 & 0b00000111;
+    tinyfp f2 = tf2 & 0b00000111;
+
+    if (((tf1 << 1) >> 4) != 0)
+        f1 = f1 | 0b00001000;
+    if (((tf2 << 1) >> 4) != 0)
+        f2 = f2 | 0b00001000;
+
+    tinyfp res = 0;
+
+    int n = 3;
+    while(n >= 0) {
+        if ( ((f2 >> n) && 0b00000001) == 1)
+             res = res + tinyfp;
+        res = res << 1;
+    }
+    return res;
+
+}
+
 tinyfp mul(tinyfp tf1, tinyfp tf2){
+
+    tf1 = changeZero(tf1);
+    tf2 = changeZero(tf2);
+    int s1 = checkSpecial(tf1);
+    int s2 = checkSpecial(tf2);
+
+    // nan cases
+    if ((s1 == 2) || (s2 == 2))
+        return 0b01111111;
+    if ((s1 * s1 == 1) && tf2 == 0)
+        return 0b01111111;
+    if  ((s2 * s2 == 1) && tf1 == 0)
+        return 0b01111111;
+
+    // check inf cases
+    if ((s1 != 0) || (s2 != 0)) {
+        // one of them is +-inf
+        if ((tf1 >> 7) == (tf2 >> 7))
+            return 0b01111000;
+        return 0b11111000;
+    }
+
+
+    // normal cases
+    // get fraction
+    tinyfp frac = mulFrac(tf1, tf2);
+
+    // get exponent
+
+
+
 	return 9;
 }
 
