@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/test.c
+/home/ds-ubuntu/Documents/Computer-Architecture/hw1/test.c
 stdio.h
 -
 stdlib.h

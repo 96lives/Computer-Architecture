@@ -43,19 +43,33 @@ union Data {
 
 tinyfp float2tinyfp(float x) {
 
+
     // check out of range or +-inf
-    if (x > 480 || (x == 1.0 / 0)) {
+    if (x > 240 || (x == 1.0 / 0)) {
         return 0b01111000;
     }
-    else if (x < -480 || (x == -1.0 / 0)) {
+    else if (x < -240 || (x == -1.0 / 0)) {
         return 0b11111000;
     }
 
     // check +-nan
     if (x != x) {
-        if (x < 0)
-            return 0b01111100;
-        return 0b11111100;
+        union Data d;
+        d.f = x;
+        d.i = d.i >> 31;
+        if (d.i == 1)
+            return 0b11111100;
+        return 0b01111100;
+    }
+
+    // check 0
+    if (x == 0) {
+        union Data d;
+        d.f = x;
+        d.i = d.i >> 31;
+        if (d.i == 1)
+            return 0b10000000;
+        return 0b00000000;
     }
 
     // check sign
@@ -67,7 +81,6 @@ tinyfp float2tinyfp(float x) {
         result = 0b10000000;
         x = -x;
     }
-
 
     // check denormalized
     if (x < 0.015625) {
@@ -97,14 +110,15 @@ tinyfp float2tinyfp(float x) {
         exp.i = d.i;
         exp.i = (exp.i << 1) >> 24;
         exp.i = exp.i - bias_diff;
-        printf("bias: %d\n", exp.i);
         exp.i = exp.i << 3;
         result = result | exp.tf;
 
         union Data frac;
         frac.f = x;
+        printf("%f\n", x);
+
         frac.i = (frac.i << 9) >> 29;
-        PRINT_FLOAT(frac.f);
+        printf("\n");
         result = result | frac.tf;
 
     }
@@ -118,8 +132,10 @@ int main(void) {
 tinyfp float2tinyfpAnswer[N] = {0b00000001, 0b00000000, 0b11010100, 0b00111100, 0b11111001, 0b01111000};
 
      */
-    float x = 1.6;
-    printf("%f\n", x);
-    PRINT_TINYFP(float2tinyfp(x));
-
+    float x = -(0.0);
+    union Data d;
+    d.f = x;
+    printf("%d\n", x >= 0);
+    //PRINT_FLOAT(d.i);
+    //PRINT_TINYFP(float2tinyfp(x));
 };

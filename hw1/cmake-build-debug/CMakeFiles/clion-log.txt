@@ -1,4 +1,4 @@
-/opt/clion-2017.3.4/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ds-home-ubuntu/Documents/Computer-Architecture/hw1
+/opt/clion-2017.3.4/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ds-ubuntu/Documents/Computer-Architecture/hw1
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/cmake-build-debug
+-- Build files have been written to: /home/ds-ubuntu/Documents/Computer-Architecture/hw1/cmake-build-debug

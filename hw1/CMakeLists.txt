@@ -7,5 +7,5 @@ add_executable(hw1
         # pa1-test.c
         # pa1.c
         # pa1.h
-         test.c
+        test.c
         )
