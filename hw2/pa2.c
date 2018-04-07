@@ -88,7 +88,7 @@ int gt(tinyfp tf1, tinyfp tf2) {
         return 0;
 
     // negate tf2 and check sign of the added result
-    if ((tf >> 7) == 0)
+    if ((tf2 >> 7) == 0)
         tf2 = tf2 | 0b10000000;
     else
         tf2 = tf2 & 0b01111111;
@@ -101,11 +101,6 @@ int gt(tinyfp tf1, tinyfp tf2) {
 tinyfp add(tinyfp tf1, tinyfp tf2){
 	return 9;
 }
-
-union Data {
-    unsigned int ui;
-    tinyfp tf;
-};
 
 tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
 
@@ -122,11 +117,11 @@ tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
     int n = 3;
     while(n >= 0) {
         if ( ((f2 >> n) && 0b00000001) == 1)
-             res = res + tinyfp;
+             res = res + tf1;
         res = res << 1;
     }
-    return res;
 
+    return res;
 }
 
 tinyfp mul(tinyfp tf1, tinyfp tf2){
@@ -158,6 +153,7 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
     tinyfp frac = mulFrac(tf1, tf2);
 
     // get exponent
+
 
 
 
