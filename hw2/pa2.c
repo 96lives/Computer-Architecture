@@ -107,20 +107,19 @@ tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
     tinyfp f1 = tf1 & 0b00000111;
     tinyfp f2 = tf2 & 0b00000111;
 
+    //check denormalized cases
     if (((tf1 << 1) >> 4) != 0)
         f1 = f1 | 0b00001000;
     if (((tf2 << 1) >> 4) != 0)
         f2 = f2 | 0b00001000;
 
-    tinyfp res = 0;
-
-    int n = 3;
-    while(n >= 0) {
-        if ( ((f2 >> n) && 0b00000001) == 1)
+    tinyfp res = 0b00000001;
+    for (int i = 2; i >= 0; --i) {
+        if ( ((f2 >> i) && 0b00000001) == 1)
              res = res + tf1;
         res = res << 1;
     }
-
+    res = res >> 1;
     return res;
 }
 
@@ -147,12 +146,12 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
         return 0b11111000;
     }
 
-
     // normal cases
     // get fraction
     tinyfp frac = mulFrac(tf1, tf2);
 
     // get exponent
+
 
 
 

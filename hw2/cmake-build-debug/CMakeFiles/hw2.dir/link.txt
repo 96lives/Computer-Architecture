@@ -1,1 +1,1 @@
-/usr/bin/cc -g   CMakeFiles/hw2.dir/pa2-test.c.o CMakeFiles/hw2.dir/pa2.c.o CMakeFiles/hw2.dir/test.c.o  -o hw2 
+/usr/bin/cc -g   CMakeFiles/hw2.dir/pa2-test.c.o CMakeFiles/hw2.dir/pa2.c.o  -o hw2 

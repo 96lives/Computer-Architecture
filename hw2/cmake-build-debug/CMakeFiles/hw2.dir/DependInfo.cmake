@@ -4,9 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/pa2-test.c" "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/hw2.dir/pa2-test.c.o"
-  "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/pa2.c" "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/hw2.dir/pa2.c.o"
-  "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/test.c" "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/hw2.dir/test.c.o"
+  "/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2-test.c" "/home/ds-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/hw2.dir/pa2-test.c.o"
+  "/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.c" "/home/ds-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/hw2.dir/pa2.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

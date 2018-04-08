@@ -48,10 +48,10 @@ RM = /opt/clion-2017.3.4/bin/cmake/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ds-home-ubuntu/Documents/Computer-Architecture/hw2
+CMAKE_SOURCE_DIR = /home/ds-ubuntu/Documents/Computer-Architecture/hw2
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug
+CMAKE_BINARY_DIR = /home/ds-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles /home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ds-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles /home/ds-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ds-home-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/ds-ubuntu/Documents/Computer-Architecture/hw2/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -177,33 +177,6 @@ pa2.c.s:
 	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/pa2.c.s
 .PHONY : pa2.c.s
 
-test.o: test.c.o
-
-.PHONY : test.o
-
-# target to build an object file
-test.c.o:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/test.c.o
-.PHONY : test.c.o
-
-test.i: test.c.i
-
-.PHONY : test.i
-
-# target to preprocess a source file
-test.c.i:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/test.c.i
-.PHONY : test.c.i
-
-test.s: test.c.s
-
-.PHONY : test.s
-
-# target to generate assembly for a file
-test.c.s:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/test.c.s
-.PHONY : test.c.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -219,9 +192,6 @@ help:
 	@echo "... pa2.o"
 	@echo "... pa2.i"
 	@echo "... pa2.s"
-	@echo "... test.o"
-	@echo "... test.i"
-	@echo "... test.s"
 .PHONY : help
 
 

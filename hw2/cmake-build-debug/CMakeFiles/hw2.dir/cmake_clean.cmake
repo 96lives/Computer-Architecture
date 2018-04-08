@@ -1,7 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/hw2.dir/pa2-test.c.o"
   "CMakeFiles/hw2.dir/pa2.c.o"
-  "CMakeFiles/hw2.dir/test.c.o"
   "hw2.pdb"
   "hw2"
 )

@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2-test.c
+stdio.h
+-
+pa2.h
+/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.h
+
+/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.c
+pa2.h
+/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.h
+
+/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.h
+
