@@ -107,20 +107,82 @@ tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
     tinyfp f1 = tf1 & 0b00000111;
     tinyfp f2 = tf2 & 0b00000111;
 
-    //check denormalized cases
     if (((tf1 << 1) >> 4) != 0)
         f1 = f1 | 0b00001000;
     if (((tf2 << 1) >> 4) != 0)
         f2 = f2 | 0b00001000;
 
-    tinyfp res = 0b00000001;
-    for (int i = 2; i >= 0; --i) {
-        if ( ((f2 >> i) && 0b00000001) == 1)
-             res = res + tf1;
-        res = res << 1;
+    tinyfp res = 0;
+    for (int i = 3; i >= 0; --i) {
+        if (((f2 >> i) & 0b00000001) == 1)
+            res = res + f1;
+        if (i != 0)
+            res = res << 1;
     }
-    res = res >> 1;
+
     return res;
+}
+
+
+tinyfp roundToEven(tinyfp tf) {
+    for (int i = 7; i >= 0; --i) {
+        if (tf >> i == 1) {
+            if ( ( (tf << (11 - i) ) >> 7) == 1) {
+                tinyfp checkHalfOne = (tf << (10 - i) ) >> 7;
+                tinyfp checkHalfZero = tf << 12 - i;
+                tinyfp upValue = 1 << i - 3;
+                if ((checkHalfZero > 0) || (checkHalfOne == 1 && checkHalfZero == 0))
+                    tf = tf + upValue;
+            }
+            break;
+        }
+    }
+    return tf;
+}
+
+int checkNthBitOne(tinyfp tf, int n) {
+    if (n < 0)
+        return 0;
+    tinyfp mask = 1;
+    return ((tf >> n) & mask) == 1;
+}
+
+// changes fraction part to tinyfloat fraction part
+tinyfp normFrac(tinyfp tf) {
+    tinyfp res = 0;
+    for (int i = 7; i >= 0; --i) {
+        if (tf >> i == 1) {
+            if (checkNthBitOne(tf, i - 1))
+                res = res | 0b00000100;
+            //PRINT_TINYFP(res);
+            if (checkNthBitOne(tf, i - 2))
+                res = res | 0b00000010;
+            //PRINT_TINYFP(res);
+            if (checkNthBitOne(tf, i - 3))
+                res = res | 0b00000001;
+            //PRINT_TINYFP(res);
+            break;
+        }
+    }
+    return res;
+}
+
+tinyfp intToExp(int exp) {
+
+    exp += 7; // add bias
+    if (exp < 0)
+        return 0;
+    if (exp >= 15)
+        return 0b01111000;
+    tinyfp temp = 0;
+    for (int i = 0; i < 4; i++) {
+        if (exp % 2 == 1)
+            temp = temp | 0b10000000;
+        exp /= 2;
+        temp = temp >> 1;
+    }
+    return temp;
+
 }
 
 tinyfp mul(tinyfp tf1, tinyfp tf2){
@@ -148,15 +210,51 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
 
     // normal cases
     // get fraction
-    tinyfp frac = mulFrac(tf1, tf2);
+    tinyfp mul = mulFrac(tf1, tf2);
+    //printf("multiply fraction\n");
+    //PRINT_TINYFP(mul);
+    //printf("\n");
+    tinyfp frac = roundToEven(mul);
+    //printf("round to even\n");
+    //PRINT_TINYFP(frac);
+    //printf("\n");
+    if (frac == 0)
+        return 0;
 
-    // get exponent
+    int exp = -7 -7 -6; //7's due to basis, -6 due to fraction part
+    tinyfp exp1 = (tf1 << 1) >> 4;
+    tinyfp exp2 = (tf2 << 1) >> 4;
+    exp = exp + exp1 + exp2;
 
+    // find the first one of fraction part
+    for (int i = 7; i >= 0; --i) {
+        if (frac >> i == 1) {
+            exp += i;
+            //printf("Exp: %d\n", exp);
+            if (exp < -9)
+                return 0;
+            if (exp >= -6)
+                frac = normFrac(frac);
+            else {
+                // fix exponent to -6 and differ the fraction values
+                int expDiff = -6 - exp + i;
+                frac = frac >> expDiff;
+            }
+            break;
+        }
+    }
+    tinyfp res = 0;
+    if ( (tf1 >> 7) != (tf2 >> 7) )
+        res = 0b10000000;
+    res = res | frac;
+    //printf("Exp: %d\n", exp);
+    res = res | intToExp(exp);
 
-
-
-
-	return 9;
+	return res;
 }
+
+
+
+
 
 
