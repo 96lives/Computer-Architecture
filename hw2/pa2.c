@@ -12,6 +12,19 @@
 //---------------------------------------------------------
 
 #include "pa2.h"
+#include <stdio.h>
+#define BYTE_FORMAT "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BITS(byte)  (byte & 0x80 ? '1' : '0'), \
+  							(byte & 0x40 ? '1' : '0'), \
+  							(byte & 0x20 ? '1' : '0'), \
+  							(byte & 0x10 ? '1' : '0'), \
+  							(byte & 0x08 ? '1' : '0'), \
+  							(byte & 0x04 ? '1' : '0'), \
+  							(byte & 0x02 ? '1' : '0'), \
+  							(byte & 0x01 ? '1' : '0')
+
+#define PRINT_TINYFP(t)		printf("tinyfp("BYTE_FORMAT"), ", BYTE_TO_BITS(t))
+
 typedef unsigned char tinyfp;
 
 // If this file contains any "float" or "double" word,
@@ -123,12 +136,30 @@ tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
     return res;
 }
 
+int checkNthBitOne(tinyfp tf, int n) {
+    if (n < 0)
+        return 0;
+    tinyfp mask = 1;
+    return ((tf >> n) & mask) == 1;
+}
 
-tinyfp roundToEven(tinyfp tf) {
+tinyfp onesMask(int n) {
+
+    tinyfp res = 0;
+    for (int i = 0; i <= n; ++i) {
+        tinyfp mask = 1 << n;
+        res = res | mask;
+    }
+    return res;
+}
+
+// check (after 3 numbers) after the first 1
+tinyfp roundToEvenNorm(tinyfp tf) {
+
     for (int i = 7; i >= 0; --i) {
-        if (tf >> i == 1) {
-            if ( ( (tf << (11 - i) ) >> 7) == 1) {
-                tinyfp checkHalfOne = (tf << (10 - i) ) >> 7;
+        if (checkNthBitOne(tf, i)) {
+            if (checkNthBitOne(tf, i - 4)) {
+                tinyfp checkHalfOne = checkNthBitOne(tf, i - 3);
                 tinyfp checkHalfZero = tf << 12 - i;
                 tinyfp upValue = 1 << i - 3;
                 if ((checkHalfZero > 0) || (checkHalfOne == 1 && checkHalfZero == 0))
@@ -140,12 +171,23 @@ tinyfp roundToEven(tinyfp tf) {
     return tf;
 }
 
-int checkNthBitOne(tinyfp tf, int n) {
-    if (n < 0)
-        return 0;
-    tinyfp mask = 1;
-    return ((tf >> n) & mask) == 1;
+tinyfp roundToEvenDenorm(tinyfp tf) {
+
+    for (int i = 7; i >= 0; --i) {
+        if (checkNthBitOne(tf, i)) {
+            if (checkNthBitOne(tf, i - 3)) {
+                tinyfp checkHalfOne = tf & onesMask(i - 2);
+                tinyfp checkHalfZero = tf << 11 - i;
+                tinyfp upValue = 1 << i - 2;
+                if ((checkHalfZero > 0) || (checkHalfOne == 1 && checkHalfZero == 0))
+                    tf = tf + upValue;
+            }
+            break;
+        }
+    }
+    return tf;
 }
+
 
 // changes fraction part to tinyfloat fraction part
 tinyfp normFrac(tinyfp tf) {
@@ -167,10 +209,11 @@ tinyfp normFrac(tinyfp tf) {
     return res;
 }
 
+// for normalized values only
 tinyfp intToExp(int exp) {
 
     exp += 7; // add bias
-    if (exp < 0)
+    if (exp <= 0)
         return 0;
     if (exp >= 15)
         return 0b01111000;
@@ -210,14 +253,7 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
 
     // normal cases
     // get fraction
-    tinyfp mul = mulFrac(tf1, tf2);
-    //printf("multiply fraction\n");
-    //PRINT_TINYFP(mul);
-    //printf("\n");
-    tinyfp frac = roundToEven(mul);
-    //printf("round to even\n");
-    //PRINT_TINYFP(frac);
-    //printf("\n");
+    tinyfp frac = mulFrac(tf1, tf2);
     if (frac == 0)
         return 0;
 
@@ -226,28 +262,40 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
     tinyfp exp2 = (tf2 << 1) >> 4;
     exp = exp + exp1 + exp2;
 
+    tinyfp res = 0;
+    if ( (tf1 >> 7) != (tf2 >> 7) )
+        res = 0b10000000;
+
     // find the first one of fraction part
     for (int i = 7; i >= 0; --i) {
         if (frac >> i == 1) {
+            //printf("Exp: %d\n", exp);
             exp += i;
             //printf("Exp: %d\n", exp);
             if (exp < -9)
                 return 0;
-            if (exp >= -6)
+            if (exp >= -6) {
+                frac = roundToEvenNorm(frac);
                 frac = normFrac(frac);
+            }
             else {
                 // fix exponent to -6 and differ the fraction values
-                int expDiff = -6 - exp + i;
+                int expDiff = -10 - exp + i;
+                //printf("expDiff: %d\n", expDiff);
+                frac = roundToEvenDenorm(frac);
+                //PRINT_TINYFP(frac);
                 frac = frac >> expDiff;
+                if (frac == 0)
+                    return 0;
+                return res | frac;
             }
             break;
         }
     }
-    tinyfp res = 0;
-    if ( (tf1 >> 7) != (tf2 >> 7) )
-        res = 0b10000000;
+    // norm form
+    if (frac == 0)
+        return 0;
     res = res | frac;
-    //printf("Exp: %d\n", exp);
     res = res | intToExp(exp);
 
 	return res;
