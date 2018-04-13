@@ -42,15 +42,17 @@ tinyfp NINF = 0b11111000;
 */
 
 int checkSpecial(tinyfp tf) {
-
-    if ((tf | 0b01111000) != tf)
+    tinyfp mask = 0b01111000;
+    if ((tf | mask) != tf)
         return 0;
-    if ((tf << 5) == 0) {
+    tinyfp frac = tf << 5;
+
+    if (frac == 0) {
         if (tf == PINF)
             return 1;
         return -1;
     }
-    return 2;
+   return 2;
 }
 
 /*
@@ -69,6 +71,19 @@ tinyfp changeZero(tinyfp tf) {
 int checkNthBit(unsigned int uInt, unsigned int n){
     unsigned int mask = 1;
     mask = mask << n;
+    if ((uInt & mask) != 0)
+        return 1;
+    return 0;
+}
+
+int checkBelowNthBit(unsigned int uInt, int n) {
+    if (n < 0)
+        return 0;
+    unsigned int mask = 1;
+    for (int i = 0; i < n; ++i){
+        mask = mask << 1;
+        mask++;
+    }
     if ((uInt & mask) != 0)
         return 1;
     return 0;
@@ -108,22 +123,17 @@ unsigned int roundToEvenAdd(unsigned int uInt, unsigned int exp) {
     mask = (mask << (exp - 4));
     if ((uInt & mask) == 0)
         return uInt;
-    //
+
+    // 0.5 or higher removal part
     mask = 1;
     mask = mask << (exp - 3);
     unsigned int addValue = 1;
     addValue = addValue << (exp - 3);
     int fracThird = 0;
     if ((uInt & mask) != 0)    //frac third is 1
-        return uInt + addValue;
+        fracThird = 1;
 
-    // fracThird is 0
-    mask = 0;
-    for (int i = 0; i < exp - 4; ++i) {
-        mask += 1;
-        mask << 1;
-    }
-    if ((uInt & mask) == 0)
+    if (!fracThird && !checkBelowNthBit(uInt, exp - 5))
         return uInt;
     return uInt + addValue;
 }
@@ -188,6 +198,7 @@ tinyfp uIntToTF(unsigned int uInt) {
 
 
 tinyfp add(tinyfp tf1, tinyfp tf2){
+
     tf1 = changeZero(tf1);
     tf2 = changeZero(tf2);
     int s1 = checkSpecial(tf1);
@@ -197,7 +208,7 @@ tinyfp add(tinyfp tf1, tinyfp tf2){
     if (s1 != 0 || s2 != 0) {
         if (s1 == 2 || s2 == 2)
             return NAN;
-        else if (s1*s1 == -1)
+        else if (s1*s2 == -1)
             return NAN;
         else if (s1 == 1 || s2 == 1)
             return PINF;

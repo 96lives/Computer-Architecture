@@ -17,6 +17,8 @@ stdio.h
 /home/ds-ubuntu/Documents/Computer-Architecture/hw2/test.c
 stdio.h
 -
+string.h
+-
 pa2.h
 /home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.h
 
