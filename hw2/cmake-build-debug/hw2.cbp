@@ -84,13 +84,13 @@
 				</MakeCommands>
 			</Target>
 		</Build>
-		<Unit filename="/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2-test.c">
-			<Option target="hw2"/>
-		</Unit>
 		<Unit filename="/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.c">
 			<Option target="hw2"/>
 		</Unit>
 		<Unit filename="/home/ds-ubuntu/Documents/Computer-Architecture/hw2/pa2.h">
+			<Option target="hw2"/>
+		</Unit>
+		<Unit filename="/home/ds-ubuntu/Documents/Computer-Architecture/hw2/test.c">
 			<Option target="hw2"/>
 		</Unit>
 		<Unit filename="/home/ds-ubuntu/Documents/Computer-Architecture/hw2/CMakeLists.txt">

@@ -17,12 +17,11 @@
 
 
 int main (){
-
-    tinyfp a = 0b00000100;
-    tinyfp b = 0b00111001;
-    tinyfp res = mul(a, b);
-    PRINT_TINYFP(res);
-
+ 	//
+    tinyfp a = 0b01110110;
+    tinyfp b = 0b01010000;
+	tinyfp c = add(a, b);
+	PRINT_TINYFP(c);
 
 
 }

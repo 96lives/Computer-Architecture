@@ -26,8 +26,10 @@
 #define PRINT_TINYFP(t)		printf("tinyfp("BYTE_FORMAT"), ", BYTE_TO_BITS(t))
 
 typedef unsigned char tinyfp;
+tinyfp NAN = 0b01111111;
+tinyfp PINF = 0b01111000;
+tinyfp NINF = 0b11111000;
 
-// If this file contains any "float" or "double" word,
 // it will be rejected by the automatic grader.
 // (Do not use those words even in comments.)
 
@@ -44,7 +46,7 @@ int checkSpecial(tinyfp tf) {
     if ((tf | 0b01111000) != tf)
         return 0;
     if ((tf << 5) == 0) {
-        if (tf >> 7 == 0)
+        if (tf == PINF)
             return 1;
         return -1;
     }
@@ -63,6 +65,155 @@ tinyfp changeZero(tinyfp tf) {
        return 0;
     return tf;
 }
+
+int checkNthBit(unsigned int uInt, unsigned int n){
+    unsigned int mask = 1;
+    mask = mask << n;
+    if ((uInt & mask) != 0)
+        return 1;
+    return 0;
+}
+
+unsigned int tfToUInt(tinyfp tf) {
+
+    tf = changeZero(tf);
+    if (tf == 0)
+        return 0;
+    unsigned int res = 0;
+
+    // get fraction
+    res = (tf & 0b00000111);
+    // check normalized case
+    if ((tf & 0b01111000) != 0)
+        res = (res | 0x00000008);
+    // get exponent, -6 is map to 0 and, 7 is map to 13
+    unsigned int exp = ((tf & 0b01111000) >> 3);
+    if (exp != 0)
+        --exp;
+    res = res << exp;
+
+    // check sign and change it to twos complement
+    if ((tf & 0b10000000) != 0) {
+        res--;
+        res = ~res;
+    }
+    return res;
+}
+
+unsigned int roundToEvenAdd(unsigned int uInt, unsigned int exp) {
+
+    if (exp <= 3)
+        return uInt;
+    unsigned int mask = 1;
+    mask = (mask << (exp - 4));
+    if ((uInt & mask) == 0)
+        return uInt;
+    //
+    mask = 1;
+    mask = mask << (exp - 3);
+    unsigned int addValue = 1;
+    addValue = addValue << (exp - 3);
+    int fracThird = 0;
+    if ((uInt & mask) != 0)    //frac third is 1
+        return uInt + addValue;
+
+    // fracThird is 0
+    mask = 0;
+    for (int i = 0; i < exp - 4; ++i) {
+        mask += 1;
+        mask << 1;
+    }
+    if ((uInt & mask) == 0)
+        return uInt;
+    return uInt + addValue;
+}
+
+
+// Decode uInt to tf
+tinyfp uIntToTF(unsigned int uInt) {
+
+    if (uInt == 0)
+        return 0;
+
+    tinyfp res = 0;
+    //check sign
+    if (checkNthBit(uInt, 31)) {
+        res = res | 0b10000000;
+        uInt = ~uInt;
+        uInt++;
+    }
+
+    // get exponent and check the first 1
+    unsigned int exp = 31; // TODO: Can be smaller
+    while (exp > 0) {
+        if (checkNthBit(uInt, exp))
+            break;
+        exp--;
+    }
+    //if (exp != 0)
+    //    exp--;
+
+    //check out of range
+    if (exp >= 17)
+        return (res | 0b01111000);
+    // denorm
+    if (exp <= 2) {
+        res += uInt;
+        return res;
+    }
+
+   // round to even
+    uInt = roundToEvenAdd(uInt, exp);
+    unsigned int mask = 1;
+    mask = (mask << exp + 1);
+    if ((uInt & mask) != 0) {
+        if (exp >= 17)
+            return (res | 0b01111000);
+        ++exp;
+    }
+     // normalized cases
+    unsigned int frac = 0x00000007;
+    frac = frac << (exp - 3);
+    frac = (uInt & frac);
+    frac = frac >> (exp - 3);
+    res += frac;
+
+    // get exp
+    exp -= 2;
+    exp = exp << 3;
+    res = res | exp;
+    return res;
+}
+
+
+
+tinyfp add(tinyfp tf1, tinyfp tf2){
+    tf1 = changeZero(tf1);
+    tf2 = changeZero(tf2);
+    int s1 = checkSpecial(tf1);
+    int s2 = checkSpecial(tf2);
+
+    // special cases
+    if (s1 != 0 || s2 != 0) {
+        if (s1 == 2 || s2 == 2)
+            return NAN;
+        else if (s1*s1 == -1)
+            return NAN;
+        else if (s1 == 1 || s2 == 1)
+            return PINF;
+        else
+            return NINF;
+    }
+
+    // normal case
+    unsigned int etf1 = tfToUInt(tf1);
+    unsigned int etf2 = tfToUInt(tf2);
+    unsigned int res = etf1 + etf2;
+    return uIntToTF(res);
+
+
+}
+
 
 int eq(tinyfp tf1, tinyfp tf2) {
 
@@ -110,10 +261,6 @@ int gt(tinyfp tf1, tinyfp tf2) {
     return 1;
 }
 
-
-tinyfp add(tinyfp tf1, tinyfp tf2){
-	return 9;
-}
 
 tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
 
@@ -189,7 +336,7 @@ tinyfp roundToEvenDenorm(tinyfp tf) {
 }
 
 
-// changes fraction part to tinyfloat fraction part
+// changes fraction part to tinyfoat fraction part
 tinyfp normFrac(tinyfp tf) {
     tinyfp res = 0;
     for (int i = 7; i >= 0; --i) {

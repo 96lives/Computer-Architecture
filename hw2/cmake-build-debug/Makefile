@@ -123,33 +123,6 @@ hw2/fast:
 	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/build
 .PHONY : hw2/fast
 
-pa2-test.o: pa2-test.c.o
-
-.PHONY : pa2-test.o
-
-# target to build an object file
-pa2-test.c.o:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/pa2-test.c.o
-.PHONY : pa2-test.c.o
-
-pa2-test.i: pa2-test.c.i
-
-.PHONY : pa2-test.i
-
-# target to preprocess a source file
-pa2-test.c.i:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/pa2-test.c.i
-.PHONY : pa2-test.c.i
-
-pa2-test.s: pa2-test.c.s
-
-.PHONY : pa2-test.s
-
-# target to generate assembly for a file
-pa2-test.c.s:
-	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/pa2-test.c.s
-.PHONY : pa2-test.c.s
-
 pa2.o: pa2.c.o
 
 .PHONY : pa2.o
@@ -177,6 +150,33 @@ pa2.c.s:
 	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/pa2.c.s
 .PHONY : pa2.c.s
 
+test.o: test.c.o
+
+.PHONY : test.o
+
+# target to build an object file
+test.c.o:
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/test.c.o
+.PHONY : test.c.o
+
+test.i: test.c.i
+
+.PHONY : test.i
+
+# target to preprocess a source file
+test.c.i:
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/test.c.i
+.PHONY : test.c.i
+
+test.s: test.c.s
+
+.PHONY : test.s
+
+# target to generate assembly for a file
+test.c.s:
+	$(MAKE) -f CMakeFiles/hw2.dir/build.make CMakeFiles/hw2.dir/test.c.s
+.PHONY : test.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -186,12 +186,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... hw2"
-	@echo "... pa2-test.o"
-	@echo "... pa2-test.i"
-	@echo "... pa2-test.s"
 	@echo "... pa2.o"
 	@echo "... pa2.i"
 	@echo "... pa2.s"
+	@echo "... test.o"
+	@echo "... test.i"
+	@echo "... test.s"
 .PHONY : help
 
 
