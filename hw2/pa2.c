@@ -154,7 +154,7 @@ tinyfp uIntToTF(unsigned int uInt) {
     }
 
     // get exponent and check the first 1
-    unsigned int exp = 31; // TODO: Can be smaller
+    unsigned int exp = 17;
     while (exp > 0) {
         if (checkNthBit(uInt, exp))
             break;
@@ -253,7 +253,7 @@ int gt(tinyfp tf1, tinyfp tf2) {
     if (eq(tf1, tf2))
         return 0;
     // check nan
-    if (s1 == 2 || s1 == 2)
+    if (s1 == 2 || s2 == 2)
         return 0;
     // check inf
     if (s1 == 1 || s2 == -1)
@@ -272,15 +272,15 @@ int gt(tinyfp tf1, tinyfp tf2) {
     return 1;
 }
 
-
 tinyfp mulFrac(tinyfp tf1, tinyfp tf2) {
 
     tinyfp f1 = tf1 & 0b00000111;
     tinyfp f2 = tf2 & 0b00000111;
 
-    if (((tf1 << 1) >> 4) != 0)
+    tinyfp mask = 0b01111000;
+    if (((tf1 & mask) >> 3) != 0)
         f1 = f1 | 0b00001000;
-    if (((tf2 << 1) >> 4) != 0)
+    if (((tf2 & mask) >> 3) != 0)
         f2 = f2 | 0b00001000;
 
     tinyfp res = 0;
@@ -329,21 +329,28 @@ tinyfp roundToEvenNorm(tinyfp tf) {
     return tf;
 }
 
-tinyfp roundToEvenDenorm(tinyfp tf) {
+tinyfp roundToEvenDenorm(tinyfp tf, int expDiff) {
 
-    for (int i = 7; i >= 0; --i) {
+    if (expDiff == 0)
+        return tf;
+    else if (expDiff > 8)
+        return 0;
+
+    tinyfp addValue = 1;
+    addValue = addValue << expDiff;
+    //TODO: check if expDiff >= 8 is available
+    if (!checkNthBitOne(tf, expDiff - 1))
+        return tf >> expDiff;
+    for (int i = expDiff - 2; i >= 0; --i) {
         if (checkNthBitOne(tf, i)) {
-            if (checkNthBitOne(tf, i - 3)) {
-                tinyfp checkHalfOne = tf & onesMask(i - 2);
-                tinyfp checkHalfZero = tf << 11 - i;
-                tinyfp upValue = 1 << i - 2;
-                if ((checkHalfZero > 0) || (checkHalfOne == 1 && checkHalfZero == 0))
-                    tf = tf + upValue;
-            }
-            break;
+            if (expDiff == 8)
+                return 0b11111111;
+            return ((tf + addValue) >> expDiff);
         }
     }
-    return tf;
+    if (checkNthBitOne(tf, expDiff))
+        return (tf + addValue) >> expDiff;
+    return tf >> expDiff;
 }
 
 
@@ -415,34 +422,41 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
     if (frac == 0)
         return 0;
 
+    tinyfp expMask = 0b01111000;
     int exp = -7 -7 -6; //7's due to basis, -6 due to fraction part
-    tinyfp exp1 = (tf1 << 1) >> 4;
-    tinyfp exp2 = (tf2 << 1) >> 4;
-    exp = exp + exp1 + exp2;
-
+    tinyfp exp1 = (tf1 & expMask) >> 3;
+    tinyfp exp2 = (tf2 & expMask) >> 3;
+    exp += exp1 + exp2;
+    if (exp1 == 0)
+        exp++;
+    if (exp2 == 0)
+        exp++;
     tinyfp res = 0;
+
     if ( (tf1 >> 7) != (tf2 >> 7) )
         res = 0b10000000;
 
-    // find the first one of fraction part
+    // TODO --------------------------------------------------------------
+    // find leading one of fraction part
     for (int i = 7; i >= 0; --i) {
         if (frac >> i == 1) {
-            //printf("Exp: %d\n", exp);
             exp += i;
-            //printf("Exp: %d\n", exp);
-            if (exp < -9)
+            if (exp < -10)
                 return 0;
             if (exp >= -6) {
                 frac = roundToEvenNorm(frac);
+                if ((frac >> (i + 1)) == 1)
+                    exp++;
                 frac = normFrac(frac);
-            }
+           }
             else {
                 // fix exponent to -6 and differ the fraction values
-                int expDiff = -10 - exp + i;
-                //printf("expDiff: %d\n", expDiff);
-                frac = roundToEvenDenorm(frac);
-                //PRINT_TINYFP(frac);
-                frac = frac >> expDiff;
+                exp -= i;
+                int expDiff = -9 - exp;
+                frac = roundToEvenDenorm(frac, expDiff);
+                //special case when expDiff = 10 and up occurs
+                if (frac == 0b11111111)
+                    frac = 1;
                 if (frac == 0)
                     return 0;
                 return res | frac;
@@ -451,10 +465,10 @@ tinyfp mul(tinyfp tf1, tinyfp tf2){
         }
     }
     // norm form
-    if (frac == 0)
-        return 0;
     res = res | frac;
     res = res | intToExp(exp);
+    if((res & expMask) == 0b01111000)
+        return res & 0b11111000;
 
 	return res;
 }

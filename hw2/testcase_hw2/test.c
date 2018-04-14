@@ -77,6 +77,10 @@ void myMulAnswer() {
 }
 
 // if add 1, mul 0
+// generates ./wrong_mul.txt or ./wrong_add.txt depending on add param
+// Before running checkAnswers, run myAddanswer() or myMulAnswer()
+// Ex) 00000000 * 00000001 = 00000000 , 00000001
+// means that real answer is 00000000 but the program outputs 00000001
 void checkAnswers(int add, char myAnsDir[255], char realAnsDir[255]) {
 
 	FILE *maf;
@@ -119,22 +123,15 @@ void checkAnswers(int add, char myAnsDir[255], char realAnsDir[255]) {
 
 int main (){
 
-	myMulAnswer();
-	myAddAnswer();
-	char myAnsDir [255] = "./my_mul_answer.txt";	// directory of the my answer
-	char realAnsDir [255] = "./dj_mul_answer.txt";	// directory of the existing comparison answer
-	checkAnswers(0, myAnsDir, realAnsDir);	// 1 for add, 0 for multiplication
-
-
-	/*
-	 Example:
-
 	myAddAnswer();	// create my program answer testcases to "./my_add_answer.txt"
 	myMulAnswer()  // create my program answer testcases to "./my_mul_answer.txt"
-	char myAnsDir [255] = "./my_add_answer.txt";	// directory of the my answer
-	char realAnsDir [255] = "./dj_add_answer.txt";	// directory of the existing comparison answer
-	checkAnswers(1, myAnsDir, realAnsDir);	// 1 for add, 0 for multiplication
+	char myAddAnsDir [255] = "./my_add_answer.txt";	// directory of the my answer
+	char realAddAnsDir [255] = "./ds_add_answer.txt";	// directory of the existing comparison answer	
+	char myMulAnsDir [255] = "./my_mul_answer.txt";	// directory of the my answer
+	char realMulAnsDir [255] = "./ds_mul_answer.txt";	// directory of the existing comparison answer
+	
+	checkAnswers(1, myAddAnsDir, realAddAnsDir);	// 1 for add, 0 for multiplication
+	checkAnswers(0, myMulAnsDir, realMulAnsDir);
 	 // creates what I did wrong in "wrong_add.txt" or "wrong_mul.txt"
 
-	*/
 }
