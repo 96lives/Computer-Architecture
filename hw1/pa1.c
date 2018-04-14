@@ -213,18 +213,31 @@ union Data {
 tinyfp float2tinyfp(float x) {
 
     // check out of range or +-inf
-    if (x > 480 || (x == 1.0 / 0)) {
+    if (x > 240 || (x == 1.0 / 0)) {
         return 0b01111000;
     }
-    else if (x < -480 || (x == -1.0 / 0)) {
+    else if (x < -240 || (x == -1.0 / 0)) {
         return 0b11111000;
     }
 
     // check +-nan
     if (x != x) {
-        if (x < 0)
-            return 0b01111100;
-        return 0b11111100;
+        union Data d;
+        d.f = x;
+        d.i = d.i >> 31;
+        if (d.i == 1)
+            return 0b11111100;
+        return 0b01111100;
+    }
+
+    // check 0
+    if (x == 0) {
+        union Data d;
+        d.f = x;
+        d.i = d.i >> 31;
+        if (d.i == 1)
+            return 0b10000000;
+        return 0b00000000;
     }
 
     // check sign

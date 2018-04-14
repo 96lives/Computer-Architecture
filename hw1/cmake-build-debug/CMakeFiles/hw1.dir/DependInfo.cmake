@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/test.c" "/home/ds-home-ubuntu/Documents/Computer-Architecture/hw1/cmake-build-debug/CMakeFiles/hw1.dir/test.c.o"
+  "/home/ds-ubuntu/Documents/Computer-Architecture/hw1/test.c" "/home/ds-ubuntu/Documents/Computer-Architecture/hw1/cmake-build-debug/CMakeFiles/hw1.dir/test.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
