@@ -17,6 +17,9 @@
 .globl bmp_grid
 	.type bmp_grid,@function
 
+
+
+
 bmp_grid:
 	#------------------------------------------------------------
 	# Use %rax, %rbx, %rcx, %rdx, %rsi, and %rdi registers only
@@ -26,7 +29,24 @@ bmp_grid:
 	#   gap	   is in %rcx
 	#------------------------------------------------------------
 
-	# --> FILL HERE <--
+	movq $0, (%rdi)
+	movq $0, 1(%rdi)
+	movq $255, 2(%rdi)
+	movq $0, 3(%rdi)
+	movq $0, 4(%rdi)
+	movq $255, 5(%rdi)
+	movq $0, 6(%rdi)
+	movq $0, 7(%rdi)
+	movq $255, 8(%rdi)
+	movq $0, 9(%rdi)
+	movq $0, 10(%rdi)
+	movq $255, 11(%rdi)
+
+
+
+
+	movq %rdi, %rax
+
 
 
 
