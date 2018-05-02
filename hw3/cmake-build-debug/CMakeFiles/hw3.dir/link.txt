@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/hw3.dir/bmp.c.o CMakeFiles/hw3.dir/bmpgrid.s.o  -o hw3 

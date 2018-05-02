@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ds-ubuntu/CLionProjects/hw3/bmp.c
+stdio.h
+-
+sys/types.h
+-
+sys/stat.h
+-
+unistd.h
+-
+fcntl.h
+-
+stdlib.h
+-
+errno.h
+-
+bmp.h
+/home/ds-ubuntu/CLionProjects/hw3/bmp.h
+
+/home/ds-ubuntu/CLionProjects/hw3/bmp.h
+
