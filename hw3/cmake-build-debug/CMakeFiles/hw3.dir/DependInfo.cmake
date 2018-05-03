@@ -5,7 +5,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_ASM
-  "/home/ds-ubuntu/CLionProjects/hw3/bmpgrid.s" "/home/ds-ubuntu/CLionProjects/hw3/cmake-build-debug/CMakeFiles/hw3.dir/bmpgrid.s.o"
+  "/home/ds-ubuntu/Documents/Computer-Architecture/hw3/bmpgrid.s" "/home/ds-ubuntu/Documents/Computer-Architecture/hw3/cmake-build-debug/CMakeFiles/hw3.dir/bmpgrid.s.o"
   )
 set(CMAKE_ASM_COMPILER_ID "GNU")
 
@@ -13,7 +13,7 @@ set(CMAKE_ASM_COMPILER_ID "GNU")
 set(CMAKE_ASM_TARGET_INCLUDE_PATH
   )
 set(CMAKE_DEPENDS_CHECK_C
-  "/home/ds-ubuntu/CLionProjects/hw3/bmp.c" "/home/ds-ubuntu/CLionProjects/hw3/cmake-build-debug/CMakeFiles/hw3.dir/bmp.c.o"
+  "/home/ds-ubuntu/Documents/Computer-Architecture/hw3/bmp.c" "/home/ds-ubuntu/Documents/Computer-Architecture/hw3/cmake-build-debug/CMakeFiles/hw3.dir/bmp.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

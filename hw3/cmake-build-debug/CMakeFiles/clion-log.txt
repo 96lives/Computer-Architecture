@@ -1,6 +1,13 @@
-/opt/clion-2017.3.4/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ds-ubuntu/CLionProjects/hw3
+/opt/clion-2017.3.4/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ds-ubuntu/Documents/Computer-Architecture/hw3
+-- The C compiler identification is GNU 7.3.0
 -- The ASM compiler identification is GNU
 -- Found assembler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/ds-ubuntu/CLionProjects/hw3/cmake-build-debug
+-- Build files have been written to: /home/ds-ubuntu/Documents/Computer-Architecture/hw3/cmake-build-debug

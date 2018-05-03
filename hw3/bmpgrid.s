@@ -26,7 +26,6 @@
 # %rax: current starting address, %rsi: bitWidth
 # returns the next starting address
 drawHorLine:
-	
 	pushq %rbx
 	# %rbx is the counter that counts till width
 	movq $0, %rbx
@@ -49,6 +48,28 @@ drawHorLine:
 		popq %rbx
 		ret
 
+
+# Assumes %rax=current starting address, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
+# Stack: []
+
+drawVerLines:
+
+    # %rbx is the counter
+    pushq %rbx
+    pushq %rcx
+    leaq (%rcx, %rcx, 2), %rcx
+    movq $0, %rbx
+    .drawVer:
+        movq $0, (%rax, %rbx)
+        movq $0, 1(%rax, %rbx)
+        movq $255, 2(%rax, %rbx)
+        addq %rcx, %rbx
+        cmpq %rbx, %rsi
+        jg .drawVer
+    addq %rsi, %rax
+    popq %rcx
+    popq %rbx
+    ret
 
 bmp_grid:
 	#------------------------------------------------------------
@@ -111,7 +132,18 @@ bmp_grid:
 		jge .drawHorLines
 
 	popq %rcx
-	
+	movq %rbx, %rax
+
+
+	#--------------Draw Vertically------------------------------
+	# Now: %rax=imgPtr, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
+	# Stack: []
+    pushq %rdx
+	.drawVerLines:
+	    call drawVerLines
+	    cmpq %rax, %rdi
+	    jg .drawVerLines
+
 	movq %rbx, %rax
 
 	#------------------------------------------------------------
