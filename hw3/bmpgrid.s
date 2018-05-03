@@ -60,9 +60,9 @@ drawVerLines:
     leaq (%rcx, %rcx, 2), %rcx
     movq $0, %rbx
     .drawVer:
-        movq $0, (%rax, %rbx)
-        movq $0, 1(%rax, %rbx)
-        movq $255, 2(%rax, %rbx)
+        movb $0, (%rax, %rbx)
+        movb $0, 1(%rax, %rbx)
+        movb $255, 2(%rax, %rbx)
         addq %rcx, %rbx
         cmpq %rbx, %rsi
         jg .drawVer
@@ -79,7 +79,11 @@ bmp_grid:
 	#	height is in %rdx
 	#   gap	   is in %rcx
 	#-----------------------------------------------------------
-
+	pushq %rbx
+	pushq %rcx
+	pushq %rdx
+	pushq %rsi
+	pushq %rdi
 	# make width = 3 * width + pad
 	
 	leaq (%rsi, %rsi, 2), %rsi
@@ -99,8 +103,7 @@ bmp_grid:
 	# move the pointer to the return value
 	movq %rdi, %rbx
 
-#---------------------------------------------------------
-	# draw rows
+#---Draw Horizontally-------------------------------------
 	# %rax keeps the address to start of the row
 	# %rdi keeps the end of the img
 	
@@ -128,8 +131,8 @@ bmp_grid:
     .drawHorLines:
 		call drawHorLine
 		subq %rcx, %rax
-		cmpq %rbx, %rax
-		jge .drawHorLines
+		cmpq %rax, %rbx
+		jl .drawHorLines
 
 	popq %rcx
 	movq %rbx, %rax
@@ -138,13 +141,17 @@ bmp_grid:
 	#--------------Draw Vertically------------------------------
 	# Now: %rax=imgPtr, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
 	# Stack: []
-    pushq %rdx
+	leaq -1(%rcx), %rcx
 	.drawVerLines:
 	    call drawVerLines
 	    cmpq %rax, %rdi
 	    jg .drawVerLines
-
 	movq %rbx, %rax
+	popq %rdi
+	popq %rsi
+	popq %rdx
+	popq %rcx
+	popq %rbx
 
 	#------------------------------------------------------------
 
