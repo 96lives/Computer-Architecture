@@ -1,0 +1,7 @@
+img = imread('btsout.bmp');
+ans = imread('bts-ans.bmp');
+imshowpair(img, ans);
+img_diff = img - ans;
+for i = 1 : szize
+
+

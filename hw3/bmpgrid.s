@@ -24,8 +24,9 @@
 
 #------------------------------------------------------
 # %rax: current starting address, %rsi: bitWidth
-# returns the next starting address
+# returns the current starting address
 drawHorLine:
+    pushq %rax
 	pushq %rbx
 	# %rbx is the counter that counts till width
 	movq $0, %rbx
@@ -36,17 +37,10 @@ drawHorLine:
 		addq $3, %rbx
 		cmpq %rbx, %rsi
 		jg .drawDotRed
-	cmpq %rbx, %rsi
-	je .done
-	subq $1, %rbx
-	cmpq %rbx, %rsi
-	je .done
-	subq $1, %rbx
+	popq %rbx
+	popq %rax
 
-	.done:
-		leaq (%rax, %rbx), %rax
-		popq %rbx
-		ret
+	ret
 
 
 # Assumes %rax=current starting address, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
@@ -80,12 +74,9 @@ bmp_grid:
 	#   gap	   is in %rcx
 	#-----------------------------------------------------------
 	pushq %rbx
-	pushq %rcx
-	pushq %rdx
-	pushq %rsi
-	pushq %rdi
 	# make width = 3 * width + pad
 	
+	# Now: %rax=?, %rbx=?, %rcx=gap, %rdx=height, %rdi=imgPtr, %rsi=width
 	leaq (%rsi, %rsi, 2), %rsi
 	movq %rsi, %rbx
 	andq $3, %rbx
@@ -94,36 +85,36 @@ bmp_grid:
 	movq $4, %rbx
 	.notZero:
 	negq %rbx
-	addq $4, %rbx
-	addq %rbx, %rsi
+	leaq 4(%rbx, %rsi), %rsi
 
-	# gap = gap + 1
-	leaq 1(%rcx), %rcx
-	
+
 	# move the pointer to the return value
 	movq %rdi, %rbx
 
+	# Now: %rax=?, %rbx=impPtr, %rcx=gap, %rdx=height, %rdi=imgPtr, %rsi=bitWidth
 #---Draw Horizontally-------------------------------------
 	# %rax keeps the address to start of the row
 	# %rdi keeps the end of the img
 	
 	movq %rsi, %rax
-	pushq %rdx
-	mulq %rdx
-	popq %rdx
+	imul %rdx, %rax
 	addq %rax, %rdi
+
 
 	# Now: %rax=?, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
 	# Stack: []
-    pushq %rcx
-    pushq %rdx
-    movq %rcx, %rax
-    mulq %rsi
-    movq %rax, %rcx
-
+    imul %rsi, %rcx
     movq %rdi, %rax
     subq %rsi, %rax
-    popq %rdx
+    #pushq %rcx
+    #pushq %rdx
+    #movq %rcx, %rax
+    #mulq %rsi
+    #movq %rax, %rcx
+
+    #movq %rdi, %rax
+    #subq %rsi, %rax
+    #popq %rdx
 
  	# Now: %rax=imgEnd-bitWidth, %rbx=imgPtr, %rcx=gap*bitWidth, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
 	# Stack: [gap]
@@ -134,23 +125,17 @@ bmp_grid:
 		cmpq %rax, %rbx
 		jl .drawHorLines
 
-	popq %rcx
 	movq %rbx, %rax
 
 
 	#--------------Draw Vertically------------------------------
 	# Now: %rax=imgPtr, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
 	# Stack: []
-	leaq -1(%rcx), %rcx
 	.drawVerLines:
 	    call drawVerLines
 	    cmpq %rax, %rdi
 	    jg .drawVerLines
 	movq %rbx, %rax
-	popq %rdi
-	popq %rsi
-	popq %rdx
-	popq %rcx
 	popq %rbx
 
 	#------------------------------------------------------------
