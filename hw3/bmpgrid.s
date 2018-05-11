@@ -1,6 +1,9 @@
 #---------------------------------------------------------
 # 
 #  Project #3: Drawing grid lines in an image
+
+
+
 #
 #  April 30, 2018
 #
@@ -21,45 +24,6 @@
 # %rbx always has the imgptr
 
 
-
-#------------------------------------------------------
-# %rax: current starting address, %rsi: bitWidth
-# returns the current starting address
-drawHorLine:
-	pushq %rbx
-	# %rbx is the counter that counts till width
-	movq $0, %rbx
-	.drawDotRed:
-		movb $0, (%rax, %rbx)
-		movb $0, 1(%rax, %rbx)
-		movb $255, 2(%rax, %rbx)
-		addq $3, %rbx
-		cmpq %rbx, %rsi
-		jg .drawDotRed
-	popq %rbx
-	ret
-
-# Assumes %rax=current starting address, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
-# Stack: []
-
-drawVerLines:
-
-    # %rbx is the counter
-    pushq %rbx
-    pushq %rcx
-    leaq (%rcx, %rcx, 2), %rcx
-    movq $0, %rbx
-    .drawVer:
-        movb $0, (%rax, %rbx)
-        movb $0, 1(%rax, %rbx)
-        movb $255, 2(%rax, %rbx)
-        addq %rcx, %rbx
-        cmpq %rbx, %rsi
-        jg .drawVer
-    popq %rcx
-    popq %rbx
-    ret
-
 bmp_grid:
 	#------------------------------------------------------------
 	# Use %rax, %rbx, %rcx, %rdx, %rsi, and %rdi registers only
@@ -71,66 +35,48 @@ bmp_grid:
 	pushq %rbx
 
 	# make width = 3 * width + pad
-	movq %rsi, %rbx
+	pushq %rsi
 	andq $3, %rbx
 	leaq (%rsi, %rsi, 2), %rsi
     addq %rbx, %rsi
-    pushq %rbx
 
-    # rax=?, rbx=pad, rcx=gap, rdx=height, rsi=width, rdi=imgptr
-    # stack=[%rbx, pad
-	# move the pointer to the return value
-	movq %rdi, %rbx
-
+    # rax=?, rbx=pad, rcx=gap, rdx=height, rsi=bitWidth, rdi=imgPtr
+    # stack=[%rbx, width
 
 #---Draw Horizontally-------------------------------------
-	# %rax keeps the address to start of the row
-	# %rdi keeps the end of the img
-	
-	movl %edx, %eax
-	pushq %rdx
-	mulq %rdx
-	popq %rdx
-	addq %rax, %rdi
-
-	# Now: %rax=?, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
-	# Stack: []
     pushq %rcx
+    pushq %rsi
     pushq %rdx
-    movq %rcx, %rax
-    mulq %rsi
-    movq %rax, %rcx
-
-    movq %rdi, %rax
-    subq %rsi, %rax
+    leaq -1(%rdx), %rax
+    imul %rsi
+    xchg %rax, %rsi
+    imul %rcx
+    addq %rdi, %rsi
     popq %rdx
+    # rax=gap * bitWidth, rbx=pad, rcx=gap, rdx=height, rsi=imgEnd-bitWidth, rdi=imgPtr
+    # stackL [%rbx, width, gap,  bitWidth
+    .LoopH:
+        # rax=gap * bitWidth, rbx=wCounter, rcx=gap, rdx=height, rsi=first address of h, rdi=imgPtr
+        # stack: [%rbx, width, gap, bitwidth
+        movq $0, %rbx
+        .LoopW:
+            leaq (%rbx, %rbx, 2), %rcx
+            movq $0, (%rsi, %rcx)
+            movq $0, 1(%rsi, %rcx)
+            movq $255, 2(%rsi, %rcx)
+            addq $1, %rbx
+            cmpq %rbx, 16(%rsp)
+            jg .LoopW
+        subq %rax, %rsi
+        cmpq %rsi, %rdi
+        jl .LoopH
+#--------------draw Vertical Lines------------------------------------
+    # rax=gap * bitWidth, rbx=pad, rcx=gap, rdx=height, rsi=?, rdi=imgPtr
+    # stack: [%rbx, width, gap,  bitwidth
 
- 	# Now: %rax=imgEnd-bitWidth, %rbx=imgPtr, %rcx=gap*bitWidth, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
-	# Stack: [gap]
-
-    .drawHorLines:
-		call drawHorLine
-		subq %rcx, %rax
-		cmpq %rax, %rbx
-		jl .drawHorLines
-	popq %rcx
-	movq %rbx, %rax
-
-
-	#--------------Draw Vertically------------------------------
-	# Now: %rax=imgPtr, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
-	# Stack: []
-	.drawVerLines:
-	    call drawVerLines
-	    addq %rsi, %rax
-	    cmpq %rax, %rdi
-	    jg .drawVerLines
-
-	#------------Pad correction--------------
-
-	popq %rdx # pop pad
-    movq %rbx, %rax
-	popq %rbx
-
-
-	ret
+    popq %rax
+    popq %rax
+    popq %rax
+    movq %rdi, %rax
+    popq %rbx
+    ret

@@ -69,70 +69,62 @@ bmp_grid:
 	#   gap	   is in %rcx
 	#-----------------------------------------------------------
 	pushq %rbx
-	# make width = 3 * width + pad
 
-	leaq (%rsi, %rsi, 2), %rsi
+	# make width = 3 * width + pad
+	pushq %rsi
 	movq %rsi, %rbx
 	andq $3, %rbx
-	cmpq $0, %rbx
-	jne .notZero
-	movq $4, %rbx
-	.notZero:
-	negq %rbx
-	addq $4, %rbx
-	addq %rbx, %rsi
+	leaq (%rsi, %rsi, 2), %rsi
+    addq %rbx, %rsi
+
+    # rax=?, rbx=pad, rcx=gap, rdx=height, rsi=bitWidth, rdi=imgPtr
+    # stack=[%rbx, width
+
+#---Draw Horizontally-------------------------------------
+    leaq -1(%rdx), %rax
+    imul %rsi
+    pushq %rsi
+    xchg %rax, %rsi
+
+    # rax=imgEnd-bitWidth, rbx=pad, rcx=gap, rdx=height, rsi=bitWidth, rdi=imgPtr
+    # stackL [%rbx, width, bitWidth
+    .LoopH:
+        # rax=imgEnd-bitWidth, rbx=wCounter, rcx=gap, rdx=height, rsi=bitWidth, rdi=imgPtr
+        # stack: [%rbx, width, bitwidth
+        movq $0, %rbx
+        .LoopW:
+            movq $0, (, %rbx, 3)
+            movq $0, 1(, %rbx, 3)
+            movq $255, 2(, %rbx, 3)
+            addq $1, %rbx
+            cmpq %rbx, 8(%rsp)
+            jle .LoopW
+        subq %rsi, %rax
+        cmpq %rax, %rdi
+
+
 
 
 	# move the pointer to the return value
 	movq %rdi, %rbx
 
-#---Draw Horizontally-------------------------------------
 	# %rax keeps the address to start of the row
 	# %rdi keeps the end of the img
-	
-	movq %rsi, %rax
-	pushq %rdx
-	mulq %rdx
-	popq %rdx
-	addq %rax, %rdi
-
-	# Now: %rax=?, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
-	# Stack: []
-    pushq %rcx
-    pushq %rdx
-    movq %rcx, %rax
-    mulq %rsi
-    movq %rax, %rcx
-
-    movq %rdi, %rax
-    subq %rsi, %rax
-    popq %rdx
-
- 	# Now: %rax=imgEnd-bitWidth, %rbx=imgPtr, %rcx=gap*bitWidth, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
-	# Stack: [gap]
-
-    .drawHorLines:
-		call drawHorLine
-		subq %rcx, %rax
-		cmpq %rax, %rbx
-		jl .drawHorLines
-	popq %rcx
-	movq %rbx, %rax
 
 
-	#--------------Draw Vertically------------------------------
-	# Now: %rax=imgPtr, %rbx=imgPtr, %rcx=gap, %rdx=height, %rdi=imgEnd, %rsi=bitWidth
+
 	# Stack: []
 	.drawVerLines:
 	    call drawVerLines
 	    addq %rsi, %rax
 	    cmpq %rax, %rdi
 	    jg .drawVerLines
-	movq %rbx, %rax
+
+	#------------Pad correction--------------
+
+	popq %rdx # pop pad
+    movq %rbx, %rax
 	popq %rbx
 
-    pushq (%rsp)
-    popq (%rsp)
-	#------------------------------------------------------------
 
 	ret
