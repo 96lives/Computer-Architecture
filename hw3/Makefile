@@ -46,5 +46,14 @@ run:
 	@$(RM) -f $(OUTBMP)
 	./$(TARGET)	$(INBMP) $(OUTBMP) $(GAP)
 
+run2:
+	@$(RM) -f $(OUTBMP)
+	./$(TARGET)	in2.bmp out2.bmp 100
+
+
+
 test:
 	$(CMP) $(OUTBMP) $(ANSBMP)
+
+test2: 
+	$(CMP) out2.bmp ans2.bmp

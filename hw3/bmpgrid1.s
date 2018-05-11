@@ -69,25 +69,28 @@ bmp_grid:
 	#   gap	   is in %rcx
 	#-----------------------------------------------------------
 	pushq %rbx
-
 	# make width = 3 * width + pad
+
+	leaq (%rsi, %rsi, 2), %rsi
 	movq %rsi, %rbx
 	andq $3, %rbx
-	leaq (%rsi, %rsi, 2), %rsi
-    addq %rbx, %rsi
-    pushq %rbx
+	cmpq $0, %rbx
+	jne .notZero
+	movq $4, %rbx
+	.notZero:
+	negq %rbx
+	addq $4, %rbx
+	addq %rbx, %rsi
 
-    # rax=?, rbx=pad, rcx=gap, rdx=height, rsi=width, rdi=imgptr
-    # stack=[%rbx, pad
+
 	# move the pointer to the return value
 	movq %rdi, %rbx
-
 
 #---Draw Horizontally-------------------------------------
 	# %rax keeps the address to start of the row
 	# %rdi keeps the end of the img
 	
-	movl %edx, %eax
+	movq %rsi, %rax
 	pushq %rdx
 	mulq %rdx
 	popq %rdx
@@ -125,12 +128,11 @@ bmp_grid:
 	    addq %rsi, %rax
 	    cmpq %rax, %rdi
 	    jg .drawVerLines
-
-	#------------Pad correction--------------
-
-	popq %rdx # pop pad
-    movq %rbx, %rax
+	movq %rbx, %rax
 	popq %rbx
 
+    pushq (%rsp)
+    popq (%rsp)
+	#------------------------------------------------------------
 
 	ret
