@@ -163,7 +163,11 @@ stat_t step_state(state_ptr s, FILE *error_file)
 
     hi0 = HI4(byte0);
     lo0 = LO4(byte0);
+	
 
+
+	// TODO! EDIT THESE!!
+	//
     need_regids =
 	(hi0 == I_RRMOVQ || hi0 == I_ALU || hi0 == I_PUSHQ ||
 	 hi0 == I_POPQ || hi0 == I_IRMOVQ || hi0 == I_RMMOVQ ||

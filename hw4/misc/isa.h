@@ -32,7 +32,7 @@ typedef enum { R_ARG, M_ARG, I_ARG, NO_ARG } arg_t;
 /* Different instruction types */
 typedef enum { I_HALT, I_NOP, I_RRMOVQ, I_IRMOVQ, I_RMMOVQ, I_MRMOVQ,
 	       I_ALU, I_JMP, I_CALL, I_RET, I_PUSHQ, I_POPQ,
-	       I_IADDQ, I_POP2 } itype_t;
+	       I_IADDQ, I_POP2, I_MULQ, I_RMMOVB, I_MRMOVB } itype_t;
 
 /* Different ALU operations */
 typedef enum { A_ADD, A_SUB, A_AND, A_XOR, A_MUL, A_NONE } alu_t;

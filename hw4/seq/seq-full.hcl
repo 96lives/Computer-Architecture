@@ -169,12 +169,11 @@ word dstM = [
 
 ################ Execute Stage   ###################################
 
-# TODO
+# DS
 ## Select input A to ALU
 word aluA = [
 	icode in { IRRMOVQ, IOPQ } : valA;
-	icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, 
-		IIADDQ, IMULQ, IRMMOVB, IMRMOVB } : valC;
+	icode in { IIRMOVQ, IRMMOVQ, IMRMOVQ, IIADDQ, IMULQ, IRMMOVB, IMRMOVB } : valC;
 	icode in { ICALL, IPUSHQ } : -8;
 	icode in { IRET, IPOPQ } : 8;
 	# Other instructions don't need ALU
@@ -182,9 +181,7 @@ word aluA = [
 
 ## Select input B to ALU
 word aluB = [
-	icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, 
-		      IPUSHQ, IRET, IPOPQ, 
-			  IIADDQ, IMULQ,  } : valB;
+	icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, IPUSHQ, IRET, IPOPQ, IIADDQ, IMULQ, IRMMOVB, IMRMOVB } : valB;
 	icode in { IRRMOVQ, IIRMOVQ } : 0;
 	# Other instructions don't need ALU
 ];
@@ -196,19 +193,19 @@ word alufun = [
 ];
 
 ## Should the condition codes be updated?
-bool set_cc = icode in { IOPQ, IIADDQ };
+bool set_cc = icode in { IOPQ, IIADDQ, IMULQ };
 
 ################ Memory Stage    ###################################
 
 ## Set read control signal
-bool mem_read = icode in { IMRMOVQ, IPOPQ, IRET };
+bool mem_read = icode in { IMRMOVQ, IPOPQ, IRET, IMRMOVB };
 
 ## Set write control signal
-bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL };
+bool mem_write = icode in { IRMMOVQ, IPUSHQ, ICALL, IRMMOVB };
 
 ## Select memory address
 word mem_addr = [
-	icode in { IRMMOVQ, IPUSHQ, ICALL, IMRMOVQ } : valE;
+	icode in { IRMMOVQ, IPUSHQ, ICALL, IMRMOVQ, IRMMOVB, IMRMOVB} : valE;
 	icode in { IPOPQ, IRET } : valA;
 	# Other instructions don't need address
 ];
@@ -216,7 +213,7 @@ word mem_addr = [
 ## Select memory input data
 word mem_data = [
 	# Value from register
-	icode in { IRMMOVQ, IPUSHQ } : valA;
+	icode in { IRMMOVQ, IPUSHQ, IRMMOVB } : valA;
 	# Return PC
 	icode == ICALL : valP;
 	# Default: Don't write anything
