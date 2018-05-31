@@ -59,6 +59,10 @@ word_t compute_alu(alu_t op, word_t argA, word_t argB)
     case A_SUB:
 	val = argB-argA;
 	break;
+	// DS
+	case A_MUL:
+	val = argA * argB;
+	break;
     case A_AND:
 	val = argA&argB;
 	break;
