@@ -4017,6 +4017,7 @@
                              | # bmp_grid() starts here
 0x400:                      | 	.pos	0x400
 0x400:                      | 	.align 8
+                            | 
 0x400:                      | bmp_grid:
                             | 	# imgptr is in %rdi
                             | 	# width  is in %rsi
@@ -4030,8 +4031,7 @@
 0x414: 30fc0100000000000000 | 	irmovq $1, %r12
 0x41e: 30fb0000000000000000 | 	irmovq $0, %r11
                             | 
-                            | 	# compute bitWidth = 3 * width + pad
-                            | 	
+                            | 	# compute bitWidth = 3 * width + pad	
                             | 	# rax = ?, rbx = ?, rcx = gap, rdx = height
                             | 	# rsp = stack, rbp = ?, rsi = width, rdi = imgptr, 
                             | 	# r8 = ?, r9 = ?, r10 = ?, 
@@ -4051,13 +4051,13 @@
                             | 
 0x432: 2005                 | 	rrmovq %rax, %rbp
 0x434: 6415                 | 	mulq %rcx, %rbp
-                            | 
+                            |  
 0x436: 2008                 | 	rrmovq %rax, %r8
 0x438: 6428                 | 	mulq %rdx, %r8
 0x43a: 6108                 | 	subq %rax, %r8
 0x43c: 6078                 | 	addq %rdi, %r8
                             | 	
-                            | 	# rax = bitWidth, rbx = pad, rcx = gap, rdx = height
+                            | 	# rax = bitWidth, rbx = w Counter, rcx = gap, rdx = height
                             | 	# rsp = stack, rbp = gap * bitWidth, rsi = width, rdi = imgptr, 
                             | 	# r8 = imgEnd - bitWidth, r9 = ?, r10 = ?, 
                             | 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
@@ -4068,18 +4068,18 @@
 0x448: 2089                 | 		rrmovq %r8, %r9
                             | 		# rbx is width counter
 0x44a:                      | 		LoopHW:
-                            | 			#rmmovb %r11, (%r9)
-                            | 			#rmmovb %r11, 1(%r9)
-0x44a: 41e90200000000000000 | 			rmmovb %r14, 2(%r9)
-0x454: 60d9                 | 			addq %r13, %r9
-0x456: 60c3                 | 			addq %r12, %rbx
-0x458: 203a                 | 			rrmovq %rbx, %r10
-0x45a: 61a6                 | 			subq %r10, %rsi
-0x45c: 744a04000000000000   | 			jne LoopHW
-0x465: 6108                 | 		subq %rax, %r8
-0x467: 2083                 | 		rrmovq %r8, %rbx
-0x469: 6173                 | 		subq %rdi, %rbx
-0x46b: 763e04000000000000   | 		jg LoopHH
+0x44a: 41b90000000000000000 | 			rmmovb %r11, (%r9)
+0x454: 41b90100000000000000 | 			rmmovb %r11, 1(%r9)
+0x45e: 41e90200000000000000 | 			rmmovb %r14, 2(%r9)
+0x468: 60d9                 | 			addq %r13, %r9
+0x46a: 60c3                 | 			addq %r12, %rbx
+0x46c: 203a                 | 			rrmovq %rbx, %r10
+0x46e: 616a                 | 			subq %rsi, %r10
+0x470: 744a04000000000000   | 			jne LoopHW
+0x479: 6158                 | 		subq %rbp, %r8
+0x47b: 2083                 | 		rrmovq %r8, %rbx
+0x47d: 6173                 | 		subq %rdi, %rbx
+0x47f: 763e04000000000000   | 		jg LoopHH
                             | 
                             | 	#-----------------Draw Vertical Lines---------------
                             | 	# rax = bitWidth, rbx = ?, rcx = gap, rdx = height
@@ -4089,9 +4089,9 @@
                             | 
                             | 
                             | 
-0x474: 2078                 | 	rrmovq %rdi, %r8
-0x476: 30f30000000000000000 | 	irmovq $0, %rbx 
-0x480: 64d1                 | 	mulq %r13, %rcx 
+0x488: 2078                 | 	rrmovq %rdi, %r8
+0x48a: 30f30000000000000000 | 	irmovq $0, %rbx 
+0x494: 64d1                 | 	mulq %r13, %rcx 
                             | 
                             | 	# rax = bitWidth, rbx = hCounter, rcx = 3 * gap, rdx = height
                             | 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
@@ -4119,8 +4119,8 @@
                             | 		#subq %rdx, %rbp 
                             | 		#jne LoopVH
                             | 
-0x482: 2070                 | 	rrmovq %rdi, %rax
+0x496: 2070                 | 	rrmovq %rdi, %rax
                             | 
                             |     # ----------------------------------------------------
                             | 
-0x484: 90                   | 	ret
+0x498: 90                   | 	ret
