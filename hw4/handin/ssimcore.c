@@ -137,6 +137,8 @@ static char digits[16] =
  * End Part 2 Globals
  ********************/
 
+
+
 static int initialized = 0;
 void sim_init()
 {
@@ -230,12 +232,16 @@ static void update_state()
 
     if (mem_write) {
       /* Should have already tested this address */
-
-      if (mem_byte)
-        set_byte_val(mem, mem_addr, mem_data);
-      else 
+		
+	
+      if (mem_byte) {
+		  byte_t byte_data = mem_data & 0xFF;
+		  set_byte_val(mem, mem_addr, byte_data);
+	  }
+      else {
         set_word_val(mem, mem_addr, mem_data);
-	sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
+      }
+      sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
 #ifdef HAS_GUI
 	    if (gui_mode) {
 		if (mem_addr % 8 != 0) {
@@ -357,8 +363,13 @@ static byte_t sim_step()
 
     if (gen_mem_read()) {
         printf("At line 355\n");
-        if (mem_byte)
-            dmem_error = dmem_error || !get_byte_val(mem, mem_addr, &valm);
+        if (mem_byte) {
+
+            dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
+			// do sign extension
+			valm = valm << 56;
+			valm = valm >> 56;
+		}
         else
             dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
       if (dmem_error) {

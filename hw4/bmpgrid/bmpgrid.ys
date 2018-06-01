@@ -85,37 +85,34 @@ bmp_grid:
 	# r8 = ?, r9 = ?, r10 = ?, 
 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
 
-
-
 	rrmovq %rdi, %r8
 	irmovq $0, %rbx 
-	mulq %r13, %rcx 
-
-	# rax = bitWidth, rbx = hCounter, rcx = 3 * gap, rdx = height
+	mulq %rcx, %r13
+	
+	
+	# rax = bitWidth, rbx = hCounter, rcx = gap, rdx = height
 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
 	# r8 = row address , r9 = actual address, r10 = ?, 
-	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
+	# r11 = 0, r12 = 1, r13 = 3 * gap, r14 = 255
 	
-	#LoopVH:
-		#irmovq $0, %rbp
-		#rrmovq %r8, %r9
+	LoopVH:
+		irmovq $0, %rbp
+		rrmovq %r8, %r9
 
-		#LoopVV:
-			#addq %rbp, %r9
-			#rmmovb %r11, (%r9)
-			#rmmovb %r11, 1(%r9)
-			#rmmovb %r14, 2(%r9)
-			#addq %r13, %r9
-			#addq %r12, %rbp
-			#rrmovq %rbp, %r10
-			#subq %rsi, %r10
-			#jne LoopVV
-
-		#addq %rax, %r8
-		#addq %r12, %rbx
-		#rrmovq %rbx, %rbp
-		#subq %rdx, %rbp 
-		#jne LoopVH
+		LoopVV:
+			rmmovb %r11, (%r9)
+			rmmovb %r11, 1(%r9)
+			rmmovb %r14, 2(%r9)
+			addq %r13, %r9
+			addq %rcx, %rbp
+			rrmovq %rbp, %r10
+			subq %rsi, %r10
+			jle LoopVV
+		addq %rax, %r8
+		addq %r12, %rbx
+		rrmovq %rbx, %rbp
+		subq %rdx, %rbp 
+		jne LoopVH
 
 	rrmovq %rdi, %rax
 
