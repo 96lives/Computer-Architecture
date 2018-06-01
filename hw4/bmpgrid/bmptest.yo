@@ -4023,8 +4023,68 @@
                             | 	# height is in %rdx
                             | 	# gap	 is in %rcx
                             |     # ----------------------------------------------------
+                            | 	
+                            | 	# compute bitWidth = 3 * width + padding
+0x400: 30f30300000000000000 | 	irmovq $3, %rbx
+0x40a: 2068                 | 	rrmovq %rsi, %r8
+0x40c: 2089                 | 	rrmovq %r8, %r9
+0x40e: 6436                 | 	mulq %rbx, %rsi
+0x410: 6238                 | 	andq %rbx, %r8
+0x412: 6086                 | 	addq %r8, %rsi
                             | 
-                            | 	# FILL HERE 
+                            | 	# rbx = 3, rcx = gap, rdx = height, rsi = bitWidth
+                            | 	# rdi = imgPtr, %r8 = pad, %r9 = width
+                            | 
+                            | 	#compute imgEnd - bitWidth
+0x414: 206a                 | 	rrmovq %rsi, %r10
+0x416: 642a                 | 	mulq %rdx, %r10
+0x418: 616a                 | 	subq %rsi, %r10
+                            | 
+                            | 	# %r10 = imgEnd
+                            | 
+                            | 	# compute bitWidth * gap
+0x41a: 206b                 | 	rrmovq %rsi, %r11
+0x41c: 641b                 | 	mulq %rcx, %r11	
+                            | 
+0x41e: 30f8ff00000000000000 | 	irmovq $255, %r8
+                            | 	
+0x428: a01f                 | 	pushq %rcx
+0x42a: 30f10000000000000000 | 	irmovq $0, %rcx
+                            | 
+                            | 
+0x434: 30fe0100000000000000 | 	irmovq $1, %r14
+                            | 	# rbx = 3, rcx = 0, rdx = height, rsi = bitWidth, 
+                            | 	# rdi = imgPtr, r8 = 255, r9 = width, r10 = imgEnd - bitWidth
+                            | 	# r11 = bitWidth * gap, r14 = 1
+                            | 	# stack [gap, height]
+                            | 
+                            | 
+0x43e:                      | 	LoopHH:
+                            | 	
+                            | 		# r10 = start of row, decrment by bitWidth * gap
+                            | 		# r12 = real address
+                            | 		# r13 = w counter
+0x43e: 20ac                 | 		rrmovq %r10, %r12
+0x440: 30fd0000000000000000 | 		irmovq $0, %r13 
+0x44a:                      | 		LoopHW:
+0x44a: 411c0000000000000000 | 			rmmovb %rcx, (%r12)
+0x454: 411c0100000000000000 | 			rmmovb %rcx, 1(%r12)
+0x45e: 418c0200000000000000 | 			rmmovb %r8, 2(%r12)
+0x468: 60ed                 | 			addq %r14, %r13
+0x46a: 20d5                 | 			rrmovq %r13, %rbp
+0x46c: 6395                 | 			xorq %r9, %rbp
+0x46e: 744a04000000000000   | 			jne LoopHW
+0x477: 616a                 | 		subq %rsi, %r10
+0x479: 753e04000000000000   | 		jge LoopHH
+                            | 
+                            | 
+                            | 
+                            | 	#-----------------Draw Vertical Lines------------------
+                            | 
+                            | 
+                            | 
+                            | 
+                            | 	
                             | 
                             | 
                             | 
@@ -4038,4 +4098,4 @@
                             | 
                             |     # ----------------------------------------------------
                             | 
-0x400: 90                   | 	ret
+0x482: 90                   | 	ret

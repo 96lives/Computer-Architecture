@@ -90,6 +90,9 @@ cc_t compute_cc(alu_t op, word_t argA, word_t argB)
         ovf = (((word_t) argA > 0) == ((word_t) argB < 0)) &&
 	       (((word_t) val < 0) != ((word_t) argB < 0));
 	break;
+	case A_MUL:
+		ovf = ! ( ( (word_t) argA == 0) || ( val / (word_t)argA == argB) );
+	break;
     case A_AND:
     case A_XOR:
 	ovf = FALSE;

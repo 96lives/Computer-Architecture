@@ -21,8 +21,76 @@ bmp_grid:
 	# height is in %rdx
 	# gap	 is in %rcx
     # ----------------------------------------------------
+	
+	# compute bitWidth = 3 * width + padding
+	irmovq $3, %rbx
+	rrmovq %rsi, %r8
+	rrmovq %r8, %r9
+	mulq %rbx, %rsi
+	andq %rbx, %r8
+	addq %r8, %rsi
 
-	# FILL HERE 
+	# rbx = 3, rcx = gap, rdx = height, rsi = bitWidth
+	# rdi = imgPtr, %r8 = pad, %r9 = width
+
+	#compute imgEnd - bitWidth
+	rrmovq %rsi, %r10
+	mulq %rdx, %r10
+	subq %rsi, %r10
+
+	# %r10 = imgEnd
+
+	# compute bitWidth * gap
+	rrmovq %rsi, %r11
+	mulq %rcx, %r11	
+
+	irmovq $255, %r8
+	
+	pushq %rcx
+	irmovq $0, %rcx
+
+
+	irmovq $1, %r14
+	# rbx = 3, rcx = 0, rdx = height, rsi = bitWidth, 
+	# rdi = imgPtr, r8 = 255, r9 = width, r10 = imgEnd - bitWidth
+	# r11 = bitWidth * gap, r14 = 1
+	# stack [gap ]
+
+
+	LoopHH:
+	
+		# r10 = start of row, decrment by bitWidth * gap
+		# r12 = real address
+		# r13 = w counter
+		rrmovq %r10, %r12
+		irmovq $0, %r13 
+		LoopHW:
+			rmmovb %rcx, (%r12)
+			rmmovb %rcx, 1(%r12)
+			rmmovb %r8, 2(%r12)
+			addq %r14, %r13
+			rrmovq %r13, %rbp
+			xorq %r9, %rbp
+			jne LoopHW
+		subq %rsi, %r10
+		jge LoopHH
+
+
+	#-----------------Draw Vertical Lines------------------
+	
+	# rbx = 3, rcx = 0, rdx = height, rsi = bitWidth, 
+	# rdi = imgPtr, r8 = 255, r9 = width, r10 = imgEnd - bitWidth
+	# r11 = bitWidth * gap, r14 = 1
+	# stack [gap ]
+
+	# use r10 as h counter
+	irmovq $0, %r10
+
+	
+
+
+
+	
 
 
 
