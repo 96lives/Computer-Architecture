@@ -232,11 +232,10 @@ static void update_state()
       /* Should have already tested this address */
 
       if (mem_byte)
-        set_byte_val(mem, mem_addr, (byte_t)mem_data);
-      else {
+        set_byte_val(mem, mem_addr, mem_data);
+      else 
         set_word_val(mem, mem_addr, mem_data);
-      }
-      sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
+	sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
 #ifdef HAS_GUI
 	    if (gui_mode) {
 		if (mem_addr % 8 != 0) {
@@ -359,7 +358,7 @@ static byte_t sim_step()
     if (gen_mem_read()) {
         printf("At line 355\n");
         if (mem_byte)
-            dmem_error = dmem_error || !get_byte_val(mem, mem_addr, (byte_t *)&valm);
+            dmem_error = dmem_error || !get_byte_val(mem, mem_addr, &valm);
         else
             dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
       if (dmem_error) {
