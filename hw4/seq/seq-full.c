@@ -68,6 +68,11 @@ long long gen_dstM()
       (REG_NONE));
 }
 
+long long gen_gen_mem_byte()
+{
+    return (((icode) == (I_MRMOVQ) || (icode) == (I_RMMOVQ)) ? (ifun) : 0);
+}
+
 long long gen_aluA()
 {
     return (((icode) == (I_RRMOVQ) || (icode) == (I_ALU)) ? (vala) : (

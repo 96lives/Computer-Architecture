@@ -4089,9 +4089,9 @@
                             | 
                             | 
                             | 
-                            | 	#rrmovq %rdi, %r8
-                            | 	#irmovq $0, %rbx 
-                            | 	#mulq %r13, %rcx 
+0x488: 2078                 | 	rrmovq %rdi, %r8
+0x48a: 30f30000000000000000 | 	irmovq $0, %rbx 
+0x494: 64d1                 | 	mulq %r13, %rcx 
                             | 
                             | 	# rax = bitWidth, rbx = hCounter, rcx = 3 * gap, rdx = height
                             | 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
@@ -4119,8 +4119,8 @@
                             | 		#subq %rdx, %rbp 
                             | 		#jne LoopVH
                             | 
-0x488: 2070                 | 	rrmovq %rdi, %rax
+0x496: 2070                 | 	rrmovq %rdi, %rax
                             | 
                             |     # ----------------------------------------------------
                             | 
-0x48a: 90                   | 	ret
+0x498: 90                   | 	ret

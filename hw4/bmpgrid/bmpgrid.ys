@@ -87,9 +87,9 @@ bmp_grid:
 
 
 
-	#rrmovq %rdi, %r8
-	#irmovq $0, %rbx 
-	#mulq %r13, %rcx 
+	rrmovq %rdi, %r8
+	irmovq $0, %rbx 
+	mulq %r13, %rcx 
 
 	# rax = bitWidth, rbx = hCounter, rcx = 3 * gap, rdx = height
 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 

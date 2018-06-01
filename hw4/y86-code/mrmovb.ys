@@ -21,6 +21,6 @@
 
 
   irmovq 	$0x0, %rax
-  rmmovb	%rax, (%rdx)
+  rmmovb	%rax, 1(%rdx)
   halt
   

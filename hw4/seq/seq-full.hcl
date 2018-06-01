@@ -166,6 +166,12 @@ word dstM = [
 
 ################ Execute Stage   ###################################
 
+
+word gen_mem_byte = [
+	icode in { IMRMOVQ, IRMMOVQ } : ifun;
+];
+
+
 # DS
 ## Select input A to ALU
 word aluA = [
