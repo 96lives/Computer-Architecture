@@ -362,7 +362,6 @@ static byte_t sim_step()
     mem_data = gen_mem_data();
 
     if (gen_mem_read()) {
-        printf("At line 355\n");
         if (mem_byte) {
 
             dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);

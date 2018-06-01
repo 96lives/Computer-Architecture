@@ -41,7 +41,6 @@ wordsig IPOPQ	'I_POPQ'
 # Instruction code for iaddq instruction
 wordsig IIADDQ	'I_IADDQ'
 # DS: Instruction code for imulq, rmmovb, mrmovb instruction
-wordsig IMULQ 'I_MULQ'
 
 ##### Symbolic represenations of Y86-64 function codes                  #####
 wordsig FNONE    'F_NONE'        # Default function code
@@ -143,8 +142,7 @@ word srcA = [
 # DS
 ## What register should be used as the B source?
 word srcB = [
-	icode in { IOPQ, IRMMOVQ, IMRMOVQ, IIADDQ,
-		IMULQ} : rB;
+	icode in { IOPQ, IRMMOVQ, IMRMOVQ, IIADDQ} : rB;
 	icode in { IPUSHQ, IPOPQ, ICALL, IRET } : RRSP;
 	1 : RNONE;  # Don't need register
 ];

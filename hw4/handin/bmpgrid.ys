@@ -78,7 +78,7 @@ bmp_grid:
 		rrmovq %r8, %rbx
 		subq %rdi, %rbx
 		jg LoopHH
-
+	
 	#-----------------Draw Vertical Lines---------------
 	# rax = bitWidth, rbx = ?, rcx = gap, rdx = height
 	# rsp = stack, rbp = gap * bitWidth, rsi = width, rdi = imgptr, 
