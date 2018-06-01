@@ -12,11 +12,12 @@
                             | #---------------------------------------------------------
                             | 
                             | # Test program for rmmovb instruction 
+0x000: 30f8efcdab0000000000 |   irmovq	$0xabcdef, %r8 
+0x00a: 30f20001000000000000 |   irmovq 	$0x100, %rdx
+0x014: 40820000000000000000 |   rmmovq 	%r8, (%rdx)
+0x01e: 30f078563412bebafeca |   irmovq 	$0xcafebabe12345678, %rax
+0x028: 41020100000000000000 |   rmmovb 	%rax, 1(%rdx)		
                             | 
-0x000: 30f20001000000000000 |   irmovq 	$0x100, %rdx
-0x00a: 30f078563412bebafeca |   irmovq 	$0xcafebabe12345678, %rax
-0x014: 41020100000000000000 |   rmmovb 	%rax, 1(%rdx)		
                             | 
-                            | 
-0x01e: 00                   |   halt
+0x032: 00                   |   halt
                             |   

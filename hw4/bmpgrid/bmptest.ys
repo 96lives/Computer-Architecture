@@ -4068,8 +4068,8 @@ bmp_grid:
 		rrmovq %r8, %r9
 		# rbx is width counter
 		LoopHW:
-			rmmovb %r11, (%r9)
-			rmmovb %r11, 1(%r9)
+			#rmmovb %r11, (%r9)
+			#rmmovb %r11, 1(%r9)
 			rmmovb %r14, 2(%r9)
 			addq %r13, %r9
 			addq %r12, %rbx

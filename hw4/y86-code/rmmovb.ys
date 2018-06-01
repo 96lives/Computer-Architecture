@@ -12,8 +12,9 @@
 #---------------------------------------------------------
 
 # Test program for rmmovb instruction 
-
+  irmovq	$0xabcdef, %r8 
   irmovq 	$0x100, %rdx
+  rmmovq 	%r8, (%rdx)
   irmovq 	$0xcafebabe12345678, %rax
   rmmovb 	%rax, 1(%rdx)		
 
