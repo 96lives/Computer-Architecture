@@ -107,7 +107,7 @@ bmp_grid:
 			addq %rcx, %rbp
 			rrmovq %rbp, %r10
 			subq %rsi, %r10
-			jle LoopVV
+			jl LoopVV
 		addq %rax, %r8
 		addq %r12, %rbx
 		rrmovq %rbx, %rbp
