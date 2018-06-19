@@ -4072,17 +4072,17 @@
                             | 	# rsp = stack, rbp = delta = gap * bitWidth + 3 * width, rsi = width, rdi = imgptr, 
                             | 	# r8 = imgEnd - bitWidth, r9 = hCounter, r10 = ?, 
                             | 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
-0x448:                      | 	L1:
-0x448: 41b80000000000000000 | 	rmmovb %r11, (%r8)
-0x452: 41b80100000000000000 | 	rmmovb %r11, 1(%r8)
-0x45c: 41e80200000000000000 | 	rmmovb %r14, 2(%r8)
-0x466: 60d8                 | 	addq %r13, %r8
-0x468: 61c3                 | 	subq %r12, %rbx
-0x46a: 764804000000000000   | 	jg 	L1
-0x473: 6158                 | 	subq %rbp, %r8
-0x475: 6119                 | 	subq %rcx, %r9
-0x477: 2063                 | 	rrmovq %rsi, %rbx
-0x479: 764804000000000000   | 	jg  L1
+0x448:                      | 	LH:
+0x448: 41b80000000000000000 | 		rmmovb %r11, (%r8)
+0x452: 41b80100000000000000 | 		rmmovb %r11, 1(%r8)
+0x45c: 41e80200000000000000 | 		rmmovb %r14, 2(%r8)
+0x466: 60d8                 | 		addq %r13, %r8
+0x468: 61c3                 | 		subq %r12, %rbx
+0x46a: 764804000000000000   | 		jg 	LH
+0x473: 6158                 | 		subq %rbp, %r8
+0x475: 6119                 | 		subq %rcx, %r9
+0x477: 2063                 | 		rrmovq %rsi, %rbx
+0x479: 764804000000000000   | 		jg  LH
                             | 		
                             | 		
                             | 			
@@ -4113,36 +4113,68 @@
                             | 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
                             | 
 0x482: 2078                 | 	rrmovq %rdi, %r8
-0x484: 30f30000000000000000 | 	irmovq $0, %rbx 
-0x48e: 641d                 | 	mulq %rcx, %r13
-                            | 	
+0x484: 2023                 | 	rrmovq %rdx, %rbx
+0x486: 2065                 | 	rrmovq %rsi, %rbp
+0x488: 641d                 | 	mulq %rcx, %r13
                             | 	
                             | 	# rax = bitWidth, rbx = hCounter, rcx = gap, rdx = height
                             | 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
-                            | 	# r8 = row address , r9 = actual address, r10 = ?, 
-                            | 	# r11 = 0, r12 = 1, r13 = 3 * gap, r14 = 255
+                            | 	# r8 = imgptr , r9 = ?, r10 = ?, 
+                            | 	# r11 = 0, r12 = 1, r13 = 3  * gap, r14 = 255
                             | 	
-0x490:                      | 	LoopVH:
-0x490: 30f50000000000000000 | 		irmovq $0, %rbp
-0x49a: 2089                 | 		rrmovq %r8, %r9
+                            | 	# calculate addition number
+                            | 	
+0x48a: 206a                 | 	rrmovq %rsi, %r10 	# r10 = width
+0x48c: 20b9                 | 	rrmovq %r11, %r9	# r9 = counter
                             | 
-0x49c:                      | 		LoopVV:
-0x49c: 41b90000000000000000 | 			rmmovb %r11, (%r9)
-0x4a6: 41b90100000000000000 | 			rmmovb %r11, 1(%r9)
-0x4b0: 41e90200000000000000 | 			rmmovb %r14, 2(%r9)
-0x4ba: 60d9                 | 			addq %r13, %r9
-0x4bc: 6015                 | 			addq %rcx, %rbp
-0x4be: 205a                 | 			rrmovq %rbp, %r10
-0x4c0: 616a                 | 			subq %rsi, %r10
-0x4c2: 729c04000000000000   | 			jl LoopVV
-0x4cb: 6008                 | 		addq %rax, %r8
-0x4cd: 60c3                 | 		addq %r12, %rbx
-0x4cf: 2035                 | 		rrmovq %rbx, %rbp
-0x4d1: 6125                 | 		subq %rdx, %rbp 
-0x4d3: 749004000000000000   | 		jne LoopVH
+0x48e:                      | 	LC: 
+0x48e: 60c9                 | 		addq %r12, %r9
+0x490: 611a                 | 		subq %rcx, %r10
+0x492: 758e04000000000000   | 		jge LC
+0x49b: 61c9                 | 	subq %r12, %r9
+0x49d: 64d9                 | 	mulq %r13, %r9
+0x49f: 6190                 | 	subq %r9, %rax 
+0x4a1: 60c0                 | 	addq %r12, %rax
+                            | 	
+                            | 	# rax = addNum = bitWidth - 3 * gap *[width / gap], rbx = hCounter, rcx = 3 * gap, rdx = height
+                            | 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
+                            | 	# r8 = imgptr , r9 = ?, r10 = ?, 
+                            | 	# r11 = 0, r12 = 1, r13 = 3 , r14 = 255
+                            | 	
+0x4a3:                      | 	LV:
+0x4a3: 41b80000000000000000 | 		rmmovb %r11, (%r8)
+0x4ad: 41b80100000000000000 | 		rmmovb %r11, 1(%r8)
+0x4b7: 41e80200000000000000 | 		rmmovb %r14, 2(%r8)
+0x4c1: 6018                 | 		addq %rcx, %r8
+0x4c3: 61c5                 | 		subq %r12, %rbp
+0x4c5: 76a304000000000000   | 		jg LV
+0x4ce: 6008                 | 		addq %rax, %r8
+0x4d0: 20b5                 | 		rrmovq %r11, %rbp
+0x4d2: 61c3                 | 		subq %r12, %rbx
+0x4d4: 76a304000000000000   | 		jg LV
+0x4dd: 2070                 | 	rrmovq %rdi, %rax
                             | 
-0x4dc: 2070                 | 	rrmovq %rdi, %rax
+                            | 	
+                            | #LoopVH:
+                            | #		irmovq $0, %rbp
+                            | #		rrmovq %r8, %r9
+                            | #
+                            | #		LoopVV:
+                            | #			rmmovb %r11, (%r9)
+                            | #			rmmovb %r11, 1(%r9)
+                            | #			rmmovb %r14, 2(%r9)
+                            | #			addq %r13, %r9
+                            | #			addq %rcx, %rbp
+                            | #			rrmovq %rbp, %r10
+                            | #			subq %rsi, %r10
+                            | #			jl LoopVV
+                            | #		addq %rax, %r8
+                            | #		addq %r12, %rbx
+                            | #		rrmovq %rbx, %rbp
+                            | #		subq %rdx, %rbp 
+                            | #		jne LoopVH
+                            | #	rrmovq %rdi, %rax
                             | 
                             |     # ----------------------------------------------------
                             | 
-0x4de: 90                   | 	ret
+0x4df: 90                   | 	ret

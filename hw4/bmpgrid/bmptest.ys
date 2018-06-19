@@ -4072,17 +4072,17 @@ bmp_grid:
 	# rsp = stack, rbp = delta = gap * bitWidth + 3 * width, rsi = width, rdi = imgptr, 
 	# r8 = imgEnd - bitWidth, r9 = hCounter, r10 = ?, 
 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
-	L1:
-	rmmovb %r11, (%r8)
-	rmmovb %r11, 1(%r8)
-	rmmovb %r14, 2(%r8)
-	addq %r13, %r8
-	subq %r12, %rbx
-	jg 	L1
-	subq %rbp, %r8
-	subq %rcx, %r9
-	rrmovq %rsi, %rbx
-	jg  L1
+	LH:
+		rmmovb %r11, (%r8)
+		rmmovb %r11, 1(%r8)
+		rmmovb %r14, 2(%r8)
+		addq %r13, %r8
+		subq %r12, %rbx
+		jg 	LH
+		subq %rbp, %r8
+		subq %rcx, %r9
+		rrmovq %rsi, %rbx
+		jg  LH
 		
 		
 			
@@ -4113,35 +4113,67 @@ bmp_grid:
 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
 
 	rrmovq %rdi, %r8
-	irmovq $0, %rbx 
+	rrmovq %rdx, %rbx
+	rrmovq %rsi, %rbp
 	mulq %rcx, %r13
-	
 	
 	# rax = bitWidth, rbx = hCounter, rcx = gap, rdx = height
 	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
-	# r8 = row address , r9 = actual address, r10 = ?, 
-	# r11 = 0, r12 = 1, r13 = 3 * gap, r14 = 255
+	# r8 = imgptr , r9 = ?, r10 = ?, 
+	# r11 = 0, r12 = 1, r13 = 3  * gap, r14 = 255
 	
-	LoopVH:
-		irmovq $0, %rbp
-		rrmovq %r8, %r9
+	# calculate addition number
+	
+	rrmovq %rsi, %r10 	# r10 = width
+	rrmovq %r11, %r9	# r9 = counter
 
-		LoopVV:
-			rmmovb %r11, (%r9)
-			rmmovb %r11, 1(%r9)
-			rmmovb %r14, 2(%r9)
-			addq %r13, %r9
-			addq %rcx, %rbp
-			rrmovq %rbp, %r10
-			subq %rsi, %r10
-			jl LoopVV
+	LC: 
+		addq %r12, %r9
+		subq %rcx, %r10
+		jge LC
+	subq %r12, %r9
+	mulq %r13, %r9
+	subq %r9, %rax 
+	addq %r12, %rax
+	
+	# rax = addNum = bitWidth - 3 * gap *[width / gap], rbx = hCounter, rcx = 3 * gap, rdx = height
+	# rsp = stack, rbp = wCounter , rsi = width, rdi = imgptr, 
+	# r8 = imgptr , r9 = ?, r10 = ?, 
+	# r11 = 0, r12 = 1, r13 = 3 , r14 = 255
+	
+	LV:
+		rmmovb %r11, (%r8)
+		rmmovb %r11, 1(%r8)
+		rmmovb %r14, 2(%r8)
+		addq %rcx, %r8
+		subq %r12, %rbp
+		jg LV
 		addq %rax, %r8
-		addq %r12, %rbx
-		rrmovq %rbx, %rbp
-		subq %rdx, %rbp 
-		jne LoopVH
-
+		rrmovq %r11, %rbp
+		subq %r12, %rbx
+		jg LV
 	rrmovq %rdi, %rax
+
+	
+#LoopVH:
+#		irmovq $0, %rbp
+#		rrmovq %r8, %r9
+#
+#		LoopVV:
+#			rmmovb %r11, (%r9)
+#			rmmovb %r11, 1(%r9)
+#			rmmovb %r14, 2(%r9)
+#			addq %r13, %r9
+#			addq %rcx, %rbp
+#			rrmovq %rbp, %r10
+#			subq %rsi, %r10
+#			jl LoopVV
+#		addq %rax, %r8
+#		addq %r12, %rbx
+#		rrmovq %rbx, %rbp
+#		subq %rdx, %rbp 
+#		jne LoopVH
+#	rrmovq %rdi, %rax
 
     # ----------------------------------------------------
 

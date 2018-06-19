@@ -604,7 +604,7 @@ void do_mem_stage()
     mem_write = gen_mem_write();
     dmem_error = FALSE;
 	mem_byte = gen_mem_byte();
-	printf("\n\n mem_byte: %d\n\n", mem_byte); 
+	//printf("\n\n mem_byte: %d\n\n", mem_byte); 
 
     if (read) {
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);

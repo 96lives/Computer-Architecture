@@ -133,11 +133,6 @@ wordsig W_valM  'mem_wb_curr->valm'	# Memory M value
 ################ Fetch Stage     ###################################
 
 
-word mem_byte = [
-	f_icode in {IMRMOVQ, IRMMOVQ} : f_ifun;
-	1 : 0; 
-];
-
 ## What address should instruction be fetched at
 word f_pc = [
 	# Mispredicted branch.  Fetch at incremented PC
@@ -276,6 +271,12 @@ word mem_addr = [
 	M_icode in { IPOPQ, IRET } : M_valA;
 	# Other instructions don't need address
 ];
+
+word mem_byte = [
+	M_icode in {IMRMOVQ, IRMMOVQ} : M_ifun;
+	1 : 0; 
+];
+
 
 ## Set read control signal
 bool mem_read = M_icode in { IMRMOVQ, IPOPQ, IRET };
