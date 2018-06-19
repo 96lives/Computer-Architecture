@@ -1,4 +1,5 @@
-# Comment this out if you don't have Tcl/Tk on your system
+#
+#Comment this out if you don't have Tcl/Tk on your system
 
 #GUIMODE=-DHAS_GUI
 

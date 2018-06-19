@@ -227,7 +227,7 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 	sim_log("\tDisabled write of 0x%llx to address 0x%llx\n", mem_data, mem_addr);
     }
     if (update_mem && mem_write) {
-
+		//mem_byte = gen_mem_byte();
 		// DS Modified
 		if (mem_byte) {
 			byte_t byte_data = mem_data & 0xFF;
@@ -451,6 +451,7 @@ void do_if_stage()
     imem_error = !get_byte_val(mem, valp, &instr);
     imem_icode = HI4(instr);
     imem_ifun = LO4(instr);
+	
 		
     if (!imem_error) {
       byte_t junk;
@@ -598,13 +599,13 @@ void do_mem_stage()
 {
     bool_t read = gen_mem_read();
 
+	mem_byte = gen_mem_byte();
     word_t valm = 0;
 
     mem_addr = gen_mem_addr();
     mem_data = ex_mem_curr->vala;
     mem_write = gen_mem_write();
     dmem_error = FALSE;
-	mem_byte = gen_mem_byte();
 
     if (read) {
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
