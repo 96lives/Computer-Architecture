@@ -1,4 +1,4 @@
-#/* $begin pipe-all-hcl */
+#/* $begin pipe-stall-hcl */
 ####################################################################
 #    HCL Description of Control for Pipelined Y86-64 Processor     #
 #    Copyright (C) Randal E. Bryant, David R. O'Hallaron, 2014     #
@@ -38,14 +38,9 @@ wordsig ICALL	'I_CALL'
 wordsig IRET	'I_RET'
 wordsig IPUSHQ	'I_PUSHQ'
 wordsig IPOPQ	'I_POPQ'
-# Instruction code for iaddq instruction
-wordsig IIADDQ	'I_IADDQ'
 
 ##### Symbolic represenations of Y86-64 function codes            #####
 wordsig FNONE    'F_NONE'        # Default function code
-
-##### SNU: For rmmovb, mrmovb instructions
-wordsig MBYTE    'M_BYTE'
 
 ##### Symbolic representation of Y86-64 Registers referenced      #####
 wordsig RRSP     'REG_RSP'    	     # Stack Pointer
@@ -135,6 +130,10 @@ wordsig W_valM  'mem_wb_curr->valm'	# Memory M value
 ####################################################################
 
 ################ Fetch Stage     ###################################
+
+word mem_byte = [
+	f_icode in {IMRMOVQ, IRMMOVQ} : f_ifun;
+];
 
 ## What address should instruction be fetched at
 word f_pc = [
@@ -240,7 +239,7 @@ word aluA = [
 
 ## Select input B to ALU
 word aluB = [
-	E_icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL, 
+	E_icode in { IRMMOVQ, IMRMOVQ, IOPQ, ICALL,
 		     IPUSHQ, IRET, IPOPQ } : E_valB;
 	E_icode in { IRRMOVQ, IIRMOVQ } : 0;
 	# Other instructions don't need ALU
@@ -308,39 +307,95 @@ word Stat = [
 ];
 
 ################ Pipeline Register Control #########################
+# situation: ret
+# bool s_ret = IRET in { D_icode, E_icode, M_icode };
+#
+# situation: jxx error
+# bool s_jxx_error = (E_icode == IJXX && !e_Cnd);
+#
+# situation: data_hazard
+# bool s_data_hazard =
+#   (
+#     (
+#       d_srcA != RNONE  &&
+#       d_srcA in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+#     ) ||
+#     (
+#       d_srcB != RNONE  &&
+#       d_srcB in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+#     )
+#   )
 
 # Should I stall or inject a bubble into Pipeline Register F?
 # At most one of these can be true.
+# bool F_stall = (s_ret || s_data_hazard) && !s_jxx_error;
+bool F_stall = (
+    (IRET in { D_icode, E_icode, M_icode }) ||
+    (
+      (
+        d_srcA != RNONE  &&
+        d_srcA in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+      ) ||
+      (
+        d_srcB != RNONE  &&
+        d_srcB in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+      )
+    )
+  ) &&
+  !(E_icode == IJXX && !e_Cnd);
+
 bool F_bubble = 0;
-bool F_stall =
-	# Modify the following to stall the update of pipeline register F
-	0 ||
-	# Stalling at fetch while ret passes through pipeline
-	IRET in { D_icode, E_icode, M_icode };
 
 # Should I stall or inject a bubble into Pipeline Register D?
 # At most one of these can be true.
-bool D_stall = 
-	# Modify the following to stall the instruction in decode
-	0;
+# bool D_stall = s_data_hazard && !s_jxx_error;
+# bool D_bubble = s_jxx_error || (!s_data_hazard && s_ret)
+bool D_stall = (
+    (
+      d_srcA != RNONE  &&
+      d_srcA in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+    ) ||
+    (
+      d_srcB != RNONE  &&
+      d_srcB in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+    )
+  ) &&
+  !(E_icode == IJXX && !e_Cnd);
 
 bool D_bubble =
-	# Mispredicted branch
-	(E_icode == IJXX && !e_Cnd) ||
-	# Stalling at fetch while ret passes through pipeline
-	!(E_icode in { IMRMOVQ, IPOPQ } && E_dstM in { d_srcA, d_srcB }) &&
-	# but not condition for a generate/use hazard
-	!0 &&
-	  IRET in { D_icode, E_icode, M_icode };
+  (E_icode == IJXX && !e_Cnd) ||
+  (
+    !(
+      (
+        d_srcA != RNONE  &&
+        d_srcA in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+      ) ||
+      (
+        d_srcB != RNONE  &&
+        d_srcB in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+      )
+    ) &&
+    (IRET in { D_icode, E_icode, M_icode })
+  );
 
 # Should I stall or inject a bubble into Pipeline Register E?
 # At most one of these can be true.
+# bool E_stall = 0;
+# bool E_bubble = s_jxx_error || s_data_hazard
 bool E_stall = 0;
 bool E_bubble =
-	# Mispredicted branch
-	(E_icode == IJXX && !e_Cnd) ||
-	# Modify the following to inject bubble into the execute stage
-	0;
+  (E_icode == IJXX && !e_Cnd) ||
+  (
+    (
+      d_srcA != RNONE  &&
+      d_srcA in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+    ) ||
+    (
+      d_srcB != RNONE  &&
+      d_srcB in { e_dstE, E_dstM, M_dstM, M_dstE, W_dstM, W_dstE }
+    )
+  );
+
 
 # Should I stall or inject a bubble into Pipeline Register M?
 # At most one of these can be true.
@@ -351,4 +406,4 @@ bool M_bubble = m_stat in { SADR, SINS, SHLT } || W_stat in { SADR, SINS, SHLT }
 # Should I stall or inject a bubble into Pipeline Register W?
 bool W_stall = W_stat in { SADR, SINS, SHLT };
 bool W_bubble = 0;
-#/* $end pipe-all-hcl */
+#/* $end pipe-stall-hcl */

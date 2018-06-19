@@ -59,6 +59,10 @@ word_t compute_alu(alu_t op, word_t argA, word_t argB)
     case A_SUB:
 	val = argB-argA;
 	break;
+	// DS
+	case A_MUL:
+	val = argA * argB;
+	break;
     case A_AND:
 	val = argA&argB;
 	break;
@@ -85,6 +89,9 @@ cc_t compute_cc(alu_t op, word_t argA, word_t argB)
     case A_SUB:
         ovf = (((word_t) argA > 0) == ((word_t) argB < 0)) &&
 	       (((word_t) val < 0) != ((word_t) argB < 0));
+	break;
+	case A_MUL:
+		ovf = ! ( ( (word_t) argA == 0) || ( val / (word_t)argA == argB) );
 	break;
     case A_AND:
     case A_XOR:
@@ -163,7 +170,11 @@ stat_t step_state(state_ptr s, FILE *error_file)
 
     hi0 = HI4(byte0);
     lo0 = LO4(byte0);
+	
 
+
+	// TODO! EDIT THESE!!
+	//
     need_regids =
 	(hi0 == I_RRMOVQ || hi0 == I_ALU || hi0 == I_PUSHQ ||
 	 hi0 == I_POPQ || hi0 == I_IRMOVQ || hi0 == I_RMMOVQ ||
