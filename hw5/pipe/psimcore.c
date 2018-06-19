@@ -227,9 +227,16 @@ static void update_state(bool_t update_mem, bool_t update_cc)
 	sim_log("\tDisabled write of 0x%llx to address 0x%llx\n", mem_data, mem_addr);
     }
     if (update_mem && mem_write) {
-	if (!set_word_val(mem, mem_addr, mem_data)) {
-	    sim_log("\tCouldn't write to address 0x%llx\n", mem_addr);
-	} else {
+		//mem_byte = gen_mem_byte();
+		// DS Modified
+		if (mem_byte) {
+			byte_t byte_data = mem_data & 0xFF;
+			set_byte_val(mem, mem_addr, byte_data);
+		}
+
+		else if (!set_word_val(mem, mem_addr, mem_data)) {
+	    	sim_log("\tCouldn't write to address 0x%llx\n", mem_addr);
+		} else {
 	    sim_log("\tWrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
 
 #ifdef HAS_GUI
@@ -444,6 +451,8 @@ void do_if_stage()
     imem_error = !get_byte_val(mem, valp, &instr);
     imem_icode = HI4(instr);
     imem_ifun = LO4(instr);
+	
+		
     if (!imem_error) {
       byte_t junk;
       /* Make sure can read maximum length instruction */
@@ -584,10 +593,13 @@ word_t gen_mem_byte();
 #endif
 word_t gen_m_stat();
 
+
+
 void do_mem_stage()
 {
     bool_t read = gen_mem_read();
 
+	mem_byte = gen_mem_byte();
     word_t valm = 0;
 
     mem_addr = gen_mem_addr();
@@ -597,6 +609,10 @@ void do_mem_stage()
 
     if (read) {
 	dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
+	if (mem_byte) {
+		valm = valm << 56;
+		valm = valm >> 56;
+	}
 	if (!dmem_error)
 	  sim_log("\tMemory: Read 0x%llx from 0x%llx\n",
 		  valm, mem_addr);
