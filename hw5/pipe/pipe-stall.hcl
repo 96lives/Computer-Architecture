@@ -132,8 +132,10 @@ wordsig W_valM  'mem_wb_curr->valm'	# Memory M value
 
 ################ Fetch Stage     ###################################
 
+
 word mem_byte = [
 	f_icode in {IMRMOVQ, IRMMOVQ} : f_ifun;
+	1 : 0; 
 ];
 
 ## What address should instruction be fetched at

@@ -4059,27 +4059,52 @@ bmp_grid:
 	
 	# rax = bitWidth, rbx = w Counter, rcx = gap, rdx = height
 	# rsp = stack, rbp = gap * bitWidth, rsi = width, rdi = imgptr, 
-	# r8 = imgEnd - bitWidth, r9 = ?, r10 = ?, 
+	# r8 = imgEnd - bitWidth, r9 = hCounter, r10 = ?, 
 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
 
-	LoopHH:
-		# fix r8
-		irmovq $0, %rbx
-		rrmovq %r8, %r9
-		# rbx is width counter
-		LoopHW:
-			rmmovb %r11, (%r9)
-			rmmovb %r11, 1(%r9)
-			rmmovb %r14, 2(%r9)
-			addq %r13, %r9
-			addq %r12, %rbx
-			rrmovq %rbx, %r10
-			subq %rsi, %r10
-			jne LoopHW
-		subq %rbp, %r8
-		rrmovq %r8, %rbx
-		subq %rdi, %rbx
-		jge LoopHH
+	rrmovq %rsi, %rbx
+	rrmovq %rdx, %r9
+	mulq %r13, %rbx
+	addq %rbx, %rbp
+	rrmovq %rsi, %rbx
+
+	# rax = bitWidth, rbx = w Counter, rcx = gap, rdx = height
+	# rsp = stack, rbp = delta = gap * bitWidth + 3 * width, rsi = width, rdi = imgptr, 
+	# r8 = imgEnd - bitWidth, r9 = hCounter, r10 = ?, 
+	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
+	L1:
+	rmmovb %r11, (%r8)
+	rmmovb %r11, 1(%r8)
+	rmmovb %r14, 2(%r8)
+	addq %r13, %r8
+	subq %r12, %rbx
+	jg 	L1
+	subq %rbp, %r8
+	subq %rcx, %r9
+	rrmovq %rsi, %rbx
+	jg  L1
+		
+		
+			
+		
+#	LoopHH:
+#		# fix r8
+#		irmovq $0, %rbx
+#		rrmovq %r8, %r9
+#		# rbx is width counter
+#		LoopHW:
+#			#rmmovb %r11, (%r9)
+#			#rmmovb %r11, 1(%r9)
+#			#rmmovb %r14, 2(%r9)
+#			addq %r13, %r9
+#			addq %r12, %rbx
+#			rrmovq %rbx, %r10
+#			subq %rsi, %r10
+#			jne LoopHW
+#		subq %rbp, %r8
+#		rrmovq %r8, %rbx
+#		subq %rdi, %rbx
+#		jge LoopHH
 	
 	#-----------------Draw Vertical Lines---------------
 	# rax = bitWidth, rbx = ?, rcx = gap, rdx = height

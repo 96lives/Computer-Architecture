@@ -4059,27 +4059,52 @@
                             | 	
                             | 	# rax = bitWidth, rbx = w Counter, rcx = gap, rdx = height
                             | 	# rsp = stack, rbp = gap * bitWidth, rsi = width, rdi = imgptr, 
-                            | 	# r8 = imgEnd - bitWidth, r9 = ?, r10 = ?, 
+                            | 	# r8 = imgEnd - bitWidth, r9 = hCounter, r10 = ?, 
                             | 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
                             | 
-0x43e:                      | 	LoopHH:
-                            | 		# fix r8
-0x43e: 30f30000000000000000 | 		irmovq $0, %rbx
-0x448: 2089                 | 		rrmovq %r8, %r9
-                            | 		# rbx is width counter
-0x44a:                      | 		LoopHW:
-0x44a: 41b90000000000000000 | 			rmmovb %r11, (%r9)
-0x454: 41b90100000000000000 | 			rmmovb %r11, 1(%r9)
-0x45e: 41e90200000000000000 | 			rmmovb %r14, 2(%r9)
-0x468: 60d9                 | 			addq %r13, %r9
-0x46a: 60c3                 | 			addq %r12, %rbx
-0x46c: 203a                 | 			rrmovq %rbx, %r10
-0x46e: 616a                 | 			subq %rsi, %r10
-0x470: 744a04000000000000   | 			jne LoopHW
-0x479: 6158                 | 		subq %rbp, %r8
-0x47b: 2083                 | 		rrmovq %r8, %rbx
-0x47d: 6173                 | 		subq %rdi, %rbx
-0x47f: 753e04000000000000   | 		jge LoopHH
+0x43e: 2063                 | 	rrmovq %rsi, %rbx
+0x440: 2029                 | 	rrmovq %rdx, %r9
+0x442: 64d3                 | 	mulq %r13, %rbx
+0x444: 6035                 | 	addq %rbx, %rbp
+0x446: 2063                 | 	rrmovq %rsi, %rbx
+                            | 
+                            | 	# rax = bitWidth, rbx = w Counter, rcx = gap, rdx = height
+                            | 	# rsp = stack, rbp = delta = gap * bitWidth + 3 * width, rsi = width, rdi = imgptr, 
+                            | 	# r8 = imgEnd - bitWidth, r9 = hCounter, r10 = ?, 
+                            | 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
+0x448:                      | 	L1:
+0x448: 41b80000000000000000 | 	rmmovb %r11, (%r8)
+0x452: 41b80100000000000000 | 	rmmovb %r11, 1(%r8)
+0x45c: 41e80200000000000000 | 	rmmovb %r14, 2(%r8)
+0x466: 60d8                 | 	addq %r13, %r8
+0x468: 61c3                 | 	subq %r12, %rbx
+0x46a: 764804000000000000   | 	jg 	L1
+0x473: 6158                 | 	subq %rbp, %r8
+0x475: 6119                 | 	subq %rcx, %r9
+0x477: 2063                 | 	rrmovq %rsi, %rbx
+0x479: 764804000000000000   | 	jg  L1
+                            | 		
+                            | 		
+                            | 			
+                            | 		
+                            | #	LoopHH:
+                            | #		# fix r8
+                            | #		irmovq $0, %rbx
+                            | #		rrmovq %r8, %r9
+                            | #		# rbx is width counter
+                            | #		LoopHW:
+                            | #			#rmmovb %r11, (%r9)
+                            | #			#rmmovb %r11, 1(%r9)
+                            | #			#rmmovb %r14, 2(%r9)
+                            | #			addq %r13, %r9
+                            | #			addq %r12, %rbx
+                            | #			rrmovq %rbx, %r10
+                            | #			subq %rsi, %r10
+                            | #			jne LoopHW
+                            | #		subq %rbp, %r8
+                            | #		rrmovq %r8, %rbx
+                            | #		subq %rdi, %rbx
+                            | #		jge LoopHH
                             | 	
                             | 	#-----------------Draw Vertical Lines---------------
                             | 	# rax = bitWidth, rbx = ?, rcx = gap, rdx = height
@@ -4087,9 +4112,9 @@
                             | 	# r8 = ?, r9 = ?, r10 = ?, 
                             | 	# r11 = 0, r12 = 1, r13 = 3, r14 = 255
                             | 
-0x488: 2078                 | 	rrmovq %rdi, %r8
-0x48a: 30f30000000000000000 | 	irmovq $0, %rbx 
-0x494: 641d                 | 	mulq %rcx, %r13
+0x482: 2078                 | 	rrmovq %rdi, %r8
+0x484: 30f30000000000000000 | 	irmovq $0, %rbx 
+0x48e: 641d                 | 	mulq %rcx, %r13
                             | 	
                             | 	
                             | 	# rax = bitWidth, rbx = hCounter, rcx = gap, rdx = height
@@ -4097,27 +4122,27 @@
                             | 	# r8 = row address , r9 = actual address, r10 = ?, 
                             | 	# r11 = 0, r12 = 1, r13 = 3 * gap, r14 = 255
                             | 	
-0x496:                      | 	LoopVH:
-0x496: 30f50000000000000000 | 		irmovq $0, %rbp
-0x4a0: 2089                 | 		rrmovq %r8, %r9
+0x490:                      | 	LoopVH:
+0x490: 30f50000000000000000 | 		irmovq $0, %rbp
+0x49a: 2089                 | 		rrmovq %r8, %r9
                             | 
-0x4a2:                      | 		LoopVV:
-0x4a2: 41b90000000000000000 | 			rmmovb %r11, (%r9)
-0x4ac: 41b90100000000000000 | 			rmmovb %r11, 1(%r9)
-0x4b6: 41e90200000000000000 | 			rmmovb %r14, 2(%r9)
-0x4c0: 60d9                 | 			addq %r13, %r9
-0x4c2: 6015                 | 			addq %rcx, %rbp
-0x4c4: 205a                 | 			rrmovq %rbp, %r10
-0x4c6: 616a                 | 			subq %rsi, %r10
-0x4c8: 72a204000000000000   | 			jl LoopVV
-0x4d1: 6008                 | 		addq %rax, %r8
-0x4d3: 60c3                 | 		addq %r12, %rbx
-0x4d5: 2035                 | 		rrmovq %rbx, %rbp
-0x4d7: 6125                 | 		subq %rdx, %rbp 
-0x4d9: 749604000000000000   | 		jne LoopVH
+0x49c:                      | 		LoopVV:
+0x49c: 41b90000000000000000 | 			rmmovb %r11, (%r9)
+0x4a6: 41b90100000000000000 | 			rmmovb %r11, 1(%r9)
+0x4b0: 41e90200000000000000 | 			rmmovb %r14, 2(%r9)
+0x4ba: 60d9                 | 			addq %r13, %r9
+0x4bc: 6015                 | 			addq %rcx, %rbp
+0x4be: 205a                 | 			rrmovq %rbp, %r10
+0x4c0: 616a                 | 			subq %rsi, %r10
+0x4c2: 729c04000000000000   | 			jl LoopVV
+0x4cb: 6008                 | 		addq %rax, %r8
+0x4cd: 60c3                 | 		addq %r12, %rbx
+0x4cf: 2035                 | 		rrmovq %rbx, %rbp
+0x4d1: 6125                 | 		subq %rdx, %rbp 
+0x4d3: 749004000000000000   | 		jne LoopVH
                             | 
-0x4e2: 2070                 | 	rrmovq %rdi, %rax
+0x4dc: 2070                 | 	rrmovq %rdi, %rax
                             | 
                             |     # ----------------------------------------------------
                             | 
-0x4e4: 90                   | 	ret
+0x4de: 90                   | 	ret
