@@ -1,24 +1,24 @@
-#---------------------------------------------------------
+#--------------------------------------------------------------
 # 
-#  Project #4: Drawing grid lines in an image in Y86-64
+#  Project #5: Optimizing performance on a pipelined processor
 #
-#  May 15, 2018
+#  June 5, 2018
 #
 #  Jin-Soo Kim (jinsoo.kim@snu.ac.kr)
 #  Systems Software & Architecture Laboratory
 #  Dept. of Computer Science and Engineering
 #  Seoul National University
 #
-#---------------------------------------------------------
+#--------------------------------------------------------------
 
 CAT = /bin/cat
 
 MISCDIR = ../misc
-SEQDIR = ../seq
+PIPEDIR = ../pipe
 
 YAS = $(MISCDIR)/yas
-SSIM = $(SEQDIR)/ssim
-SSIMFLAGS = -s
+PSIM = $(PIPEDIR)/psim
+PSIMFLAGS = -s
 
 TARGET	= bmptest.yo
 ASRCS	= bmptest.ys
@@ -38,10 +38,10 @@ clean:
 	$(RM) -f $(TARGET) $(ASRCS) $(MEMOUT) *~
 
 run: $(TARGET)
-	$(SSIM) $(TARGET)
+	$(PSIM) $(TARGET)
 
 testrun: $(TARGET)
-	$(SSIM) $(SSIMFLAGS) $(TARGET)
+	$(PSIM) $(PSIMFLAGS) $(TARGET)
 
 test: 
 	@rm -f $(MEMOUT)

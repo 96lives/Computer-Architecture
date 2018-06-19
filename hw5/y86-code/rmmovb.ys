@@ -1,15 +1,15 @@
-#---------------------------------------------------------
+#--------------------------------------------------------------
 # 
-#  Project #4: Drawing grid lines in an image in Y86-64
+#  Project #5: Optimizing performance on a pipelined processor
 #
-#  May 15, 2018
+#  June 5, 2018
 #
 #  Jin-Soo Kim (jinsoo.kim@snu.ac.kr)
 #  Systems Software & Architecture Laboratory
 #  Dept. of Computer Science and Engineering
 #  Seoul National University
 #
-#---------------------------------------------------------
+#--------------------------------------------------------------
 
 # Test program for rmmovb instruction 
 

@@ -1,5 +1,5 @@
-SIM=../seq/ssim
-TFLAGS=
+SIM=../pipe/psim
+TFLAGS=-i
 
 ISADIR = ../misc
 YAS=$(ISADIR)/yas
@@ -10,9 +10,9 @@ YAS=$(ISADIR)/yas
 	$(YAS) $*.ys
 
 test:
-	./optest.pl -s $(SIM) $(TFLAGS)
-	./jtest.pl -s $(SIM) $(TFLAGS)
-	./ctest.pl -s $(SIM) $(TFLAGS)
+	./optest.pl -s $(SIM) $(TFLAGS) 
+	./jtest.pl -s $(SIM) $(TFLAGS) 
+	./ctest.pl -s $(SIM) $(TFLAGS) 
 	./htest.pl -s $(SIM) $(TFLAGS)
 
 clean:

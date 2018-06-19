@@ -24,8 +24,8 @@
 # are currently assigned in seq/Makefile and pipe/Makefile.
 all:
 	(cd misc; make all)
-#	(cd pipe; make all GUIMODE=$(GUIMODE) TKLIBS="$(TKLIBS)" TKINC="$(TKINC)")
-	(cd seq; make all GUIMODE=$(GUIMODE) TKLIBS="$(TKLIBS)" TKINC="$(TKINC)")
+	(cd pipe; make all GUIMODE=$(GUIMODE) TKLIBS="$(TKLIBS)" TKINC="$(TKINC)")
+#	(cd seq; make all GUIMODE=$(GUIMODE) TKLIBS="$(TKLIBS)" TKINC="$(TKINC)")
 	(cd y86-code; make all)
 	(cd bmpgrid; make)
 
@@ -34,17 +34,17 @@ handin: FORCE
 	@rm -rf handin
 	@mkdir handin
 	@cp misc/isacore.c handin 
-	@cp seq/seq-full.hcl handin
-	@cp seq/ssimcore.c handin
+	@cp pipe/pipe-stall.hcl handin
+	@cp pipe/psimcore.c handin
 	@cp bmpgrid/bmpgrid.ys handin
-	@(cd handin; tar cvzf pa4.tar.gz isacore.c seq-full.hcl ssimcore.c bmpgrid.ys) > /dev/null
-	@echo "Submit handin/pa4.tar.gz file to the sys.snu.ac.kr server"
+	@(cd handin; tar cvzf pa5.tar.gz isacore.c pipe-stall.hcl psimcore.c bmpgrid.ys) > /dev/null
+	@echo "Submit handin/pa5.tar.gz file to the sys.snu.ac.kr server"
 
 clean:
 	rm -rf handin
 	rm -f *~ core
 	(cd misc; make clean)
-	(cd seq; make clean)
+	(cd pipe; make clean)
 	(cd y86-code; make clean)
 	(cd bmpgrid; make clean)
 

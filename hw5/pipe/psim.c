@@ -1,20 +1,23 @@
-/***********************************************************************
- *
- * ssim.c - Sequential Y86-64 simulator
+/**************************************************************************
+ * psim.c - Pipelined Y86-64 simulator
  * 
- * Copyright (c) 2002, 2015. Bryant and D. O'Hallaron, All rights reserved.
+ * Copyright (c) 2010, 2015. Bryant and D. O'Hallaron, All rights reserved.
  * May not be used, modified, or copied without permission.
- ***********************************************************************/ 
+ **************************************************************************/ 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
+
 #include "isa.h"
+#include "pipeline.h"
+#include "stages.h"
 #include "sim.h"
 
 #define MAXBUF 1024
+#define DEFAULTNAME "Y86-64 Simulator: "
 
 #ifdef HAS_GUI
 #include <tk.h>
@@ -24,16 +27,14 @@
 #define MAXBUF 1024
 #define TKARGS 3
 
+
 /***************
  * Begin Globals
  ***************/
 
 /* Simulator name defined and initialized by the compiled HCL file */
 /* according to the -n argument supplied to hcl2c */
-extern char simname[];
-
-/* SEQ=0, SEQ+=1. Modified by HCL main() */
-int plusmode = 0; 
+extern  char simname[];
 
 /* Parameters modifed by the command line */
 int gui_mode = FALSE;    /* Run in GUI mode instead of TTY mode? (-g) */
@@ -45,8 +46,7 @@ word_t instr_limit = 1000000; /* Instruction limit [TTY only] (-l) */
 #else
 word_t instr_limit = 10000; /* Instruction limit [TTY only] (-l) */
 #endif
-bool_t do_check = FALSE; /* Test with YIS? [TTY only] (-t) */
-
+bool_t do_check = FALSE; /* Test with ISA simulator? [TTY only] (-t) */
 #ifdef SNU
 int snu_mode = FALSE;	/* Print output for automatic grading server */
 #endif
@@ -60,6 +60,7 @@ int snu_mode = FALSE;	/* Print output for automatic grading server */
  * Begin function prototypes 
  ***************************/
 
+word_t sim_run_pipe(word_t max_instr, word_t max_cycle, byte_t *statusp, cc_t *ccp);
 static void usage(char *name);           /* Print helpful usage message */
 static void run_tty_sim();               /* Run simulator in TTY mode */
 
@@ -88,7 +89,6 @@ int sim_main(int argc, char **argv)
     int i;
     int c;
     char *myargv[MAXARGS];
-
     
     /* Parse the command line arguments */
 #ifdef SNU
@@ -136,8 +136,6 @@ int sim_main(int argc, char **argv)
 #endif
 
 
-
-
     /* Do we have too many arguments? */
     if (optind < argc - 1) {
 	printf("Too many command line arguments:");
@@ -183,20 +181,7 @@ int sim_main(int argc, char **argv)
 	    }
 	}
 	strcpy(myargv[0], argv[0]);
-
-#if 0
-	printf("argv[0]=%s\n", argv[0]);
-	{
-	    char buf[1000]; 
-	    getcwd(buf, 1000);
-	    printf("cwd=%s\n", buf);
-	}
-#endif
-
-	if (plusmode == 0) /* SEQ */
-	    strcpy(myargv[1], "seq.tcl");
-	else
-	    strcpy(myargv[1], "seq+.tcl");
+	strcpy(myargv[1], "pipe.tcl");
 	strcpy(myargv[2], object_filename);
 	myargv[3] = NULL;
 
@@ -219,7 +204,7 @@ int sim_main(int argc, char **argv)
 static void run_tty_sim() 
 {
     word_t icount = 0;
-    status = STAT_AOK;
+    byte_t run_status = STAT_AOK;
     cc_t result_cc = 0;
     word_t byte_cnt = 0;
     mem_t mem0, reg0;
@@ -231,15 +216,13 @@ static void run_tty_sim()
 	object_file = stdin;
     }
 
-    /* Initializations */
     if (verbosity >= 2)
 	sim_set_dumpfile(stdout);
     sim_init();
 
-#ifndef SNU
     /* Emit simulator name */
-    printf("%s\n", simname);
-#endif
+    if (verbosity >= 2)
+	printf("%s\n", simname);
 
     byte_cnt = load_mem(mem, object_file, 1);
     if (byte_cnt == 0) {
@@ -261,11 +244,10 @@ static void run_tty_sim()
     mem0 = copy_mem(mem);
     reg0 = copy_mem(reg);
     
-
-    icount = sim_run(instr_limit, &status, &result_cc);
+    icount = sim_run_pipe(instr_limit, 5*instr_limit, &run_status, &result_cc);
     if (verbosity > 0) {
 	printf("%lld instructions executed\n", icount);
-	printf("Status = %s\n", stat_name(status));
+	printf("Status = %s\n", stat_name(run_status));
 	printf("Condition Codes: %s\n", cc_name(result_cc));
 	printf("Changed Register State:\n");
 	diff_reg(reg0, reg, stdout);
@@ -288,13 +270,11 @@ static void run_tty_sim()
 		fprintf(fp, "Changed Memory State:\n");
 		diff_mem(mem0, mem, fp, (word_t) 0x1000);
 		fclose(fp);
-		printf("%lld instructions executed\n", icount);
 	}
 #endif
-
     if (do_check) {
 	byte_t e = STAT_AOK;
-	int step;
+	word_t step;
 	bool_t match = TRUE;
 
 	for (step = 0; step < instr_limit && e == STAT_AOK; step++) {
@@ -336,9 +316,20 @@ static void run_tty_sim()
 	    printf("ISA Check Fails\n");
 	}
     }
+    /* Emit CPI statistics */
+    {
+#ifdef SNU
+		long long total_cycles = cycles + 4;	// We count warming-up stages 
+		printf("%lld instructions in %lld cycles, CPI = %.2f\n", 
+				instructions, total_cycles, 
+				(instructions)? (double) total_cycles / (double) instructions : (double) 1.0);
+#else	
+		double cpi = instructions > 0 ? (double) cycles/instructions : 1.0;
+		printf("CPI: %lld cycles/%lld instructions = %.2f\n",
+	   	    cycles, instructions, cpi);
+#endif
+    }
 }
-
-
 
 /*
  * usage - print helpful diagnostic information
@@ -346,12 +337,12 @@ static void run_tty_sim()
 static void usage(char *name)
 {
     printf("Usage: %s [-htg] [-l m] [-v n] file.yo\n", name);
-    printf("file.yo required in GUI mode, optional in TTY mode (default stdin)\n");
+    printf("file.yo arg required in GUI mode, optional in TTY mode (default stdin)\n");
     printf("   -h     Print this message\n");
     printf("   -g     Run in GUI mode instead of TTY mode (default TTY)\n");  
     printf("   -l m   Set instruction limit to m [TTY mode only] (default %lld)\n", instr_limit);
     printf("   -v n   Set verbosity level to 0 <= n <= 2 [TTY mode only] (default %d)\n", verbosity);
-    printf("   -t     Test result against ISA simulator (yis) [TTY mode only]\n");
+    printf("   -t     Test result against ISA simulator [TTY mode only]\n");
 #ifdef SNU
 	printf("   -s     Print output for automatic grading server\n");
 #endif
@@ -359,161 +350,130 @@ static void usage(char *name)
 }
 
 
+/*****************************************************************************
+ * reporting code
+ *****************************************************************************/
+
 #ifdef HAS_GUI
-
-/* Create string in hex/oct/binary format with leading zeros */
-/* bpd denotes bits per digit  Should be in range 1-4,
-   bpw denotes bits per word.*/
-void wstring(uword_t x, int bpd, int bpw, char *str)
-{
-    int digit;
-    uword_t mask = ((uword_t) 1 << bpd) - 1;
-    for (digit = (bpw-1)/bpd; digit >= 0; digit--) {
-	uword_t val = (x >> (digit * bpd)) & mask;
-	*str++ = digits[val];
-    }
-    *str = '\0';
-}
-
 /* used for formatting instructions */
 static char status_msg[128];
 
-/* SEQ+ */
-static char *format_prev()
+static char *format_pc(pc_ptr state)
 {
-    char istring[17];
-    char mstring[17];
     char pstring[17];
-    wstring(prev_valc, 4, 64, istring);
-    wstring(prev_valm, 4, 64, mstring);
-    wstring(prev_valp, 4, 64, pstring);
-    sprintf(status_msg, "%c %s %s %s %s",
-	    prev_bcond ? 'Y' : 'N',
-	    iname(HPACK(prev_icode, prev_ifun)),
-	    istring, mstring, pstring);
-
+    wstring(state->pc, 4, 64, pstring);
+    sprintf(status_msg, "%s %s", stat_name(state->status), pstring);
     return status_msg;
 }
 
-static char *format_pc()
-{
-    char pstring[17];
-    wstring(pc, 4, 64, pstring);
-    sprintf(status_msg, "%s", pstring);
-    return status_msg;
-}
-
-static char *format_f()
+static char *format_if_id(if_id_ptr state)
 {
     char valcstring[17];
     char valpstring[17];
-    wstring(valc, 4, 64, valcstring);
-    wstring(valp, 4, 64, valpstring);
-    sprintf(status_msg, "%s %s %s %s %s", 
-	    iname(HPACK(icode, ifun)),
-	    reg_name(ra),
-	    reg_name(rb),
+    wstring(state->valc, 4, 64, valcstring);
+    wstring(state->valp, 4, 64, valpstring);
+    sprintf(status_msg, "%s %s %s %s %s %s",
+	    stat_name(state->status),
+	    iname(HPACK(state->icode,state->ifun)),
+	    reg_name(state->ra),
+	    reg_name(state->rb),
 	    valcstring,
 	    valpstring);
     return status_msg;
 }
 
-static char *format_d()
+static char *format_id_ex(id_ex_ptr state)
 {
+    char valcstring[17];
     char valastring[17];
     char valbstring[17];
-    wstring(vala, 4, 64, valastring);
-    wstring(valb, 4, 64, valbstring);
-    sprintf(status_msg, "%s %s %s %s %s %s",
+    wstring(state->valc, 4, 64, valcstring);
+    wstring(state->vala, 4, 64, valastring);
+    wstring(state->valb, 4, 64, valbstring);
+    sprintf(status_msg, "%s %s %s %s %s %s %s %s %s",
+	    stat_name(state->status),
+	    iname(HPACK(state->icode, state->ifun)),
+	    valcstring,
 	    valastring,
 	    valbstring,
-	    reg_name(destE),
-	    reg_name(destM),
-	    reg_name(srcA),
-	    reg_name(srcB));
-
+	    reg_name(state->deste),
+	    reg_name(state->destm),
+	    reg_name(state->srca),
+	    reg_name(state->srcb));
     return status_msg;
 }
 
-static char *format_e()
+static char *format_ex_mem(ex_mem_ptr state)
 {
     char valestring[17];
-    wstring(vale, 4, 64, valestring);
-    sprintf(status_msg, "%c %s",
-	    bcond ? 'Y' : 'N',
-	    valestring);
+    char valastring[17];
+    wstring(state->vale, 4, 64, valestring);
+    wstring(state->vala, 4, 64, valastring);
+    sprintf(status_msg, "%s %s %c %s %s %s %s",
+	    stat_name(state->status),
+	    iname(HPACK(state->icode, state->ifun)),
+	    state->takebranch ? 'Y' : 'N',
+	    valestring,
+	    valastring,
+	    reg_name(state->deste),
+	    reg_name(state->destm));
+
     return status_msg;
 }
 
-static char *format_m()
+static char *format_mem_wb(mem_wb_ptr state)
 {
+    char valestring[17];
     char valmstring[17];
-    wstring(valm, 4, 64, valmstring);
-    sprintf(status_msg, "%s", valmstring);
-    return status_msg;
-}
+    wstring(state->vale, 4, 64, valestring);
+    wstring(state->valm, 4, 64, valmstring);
+    sprintf(status_msg, "%s %s %s %s %s %s",
+	    stat_name(state->status),
+	    iname(HPACK(state->icode, state->ifun)),
+	    valestring,
+	    valmstring,
+	    reg_name(state->deste),
+	    reg_name(state->destm));
 
-static char *format_npc()
-{
-    char npcstring[17];
-    wstring(pc_in, 4, 64, npcstring);
-    sprintf(status_msg, "%s", npcstring);
     return status_msg;
 }
 #endif /* HAS_GUI */
 
 /* Report system state */
-#ifdef SNU
-void sim_report() {
-#else
-static void sim_report() {
-#endif
+/* SNU */
+// static void sim_report()
+void sim_report() 
+{
 
 #ifdef HAS_GUI
     if (gui_mode) {
-	report_pc(pc);
-	if (plusmode) {
-	    report_state("PREV", format_prev());
-	    report_state("PC", format_pc());
-	} else {
-	    report_state("OPC", format_pc());
-	}
-	report_state("F", format_f());
-	report_state("D", format_d());
-	report_state("E", format_e());
-	report_state("M", format_m());
-	if (!plusmode) {
-	    report_state("NPC", format_npc());
-	}
+	report_pc(f_pc, pc_curr->status != STAT_BUB,
+		  if_id_curr->stage_pc, if_id_curr->status != STAT_BUB,
+		  id_ex_curr->stage_pc, id_ex_curr->status != STAT_BUB,
+		  ex_mem_curr->stage_pc, ex_mem_curr->status != STAT_BUB,
+		  mem_wb_curr->stage_pc, mem_wb_curr->status != STAT_BUB);
+	report_state("F", 0, format_pc(pc_next));
+	report_state("F", 1, format_pc(pc_curr));
+	report_state("D", 0, format_if_id(if_id_next));
+	report_state("D", 1, format_if_id(if_id_curr));
+	report_state("E", 0, format_id_ex(id_ex_next));
+	report_state("E", 1, format_id_ex(id_ex_curr));
+	report_state("M", 0, format_ex_mem(ex_mem_next));
+	report_state("M", 1, format_ex_mem(ex_mem_curr));
+	report_state("W", 0, format_mem_wb(mem_wb_next));
+	report_state("W", 1, format_mem_wb(mem_wb_curr));
+	/* signal_sources(); */
 	show_cc(cc);
+	show_stat(status);
+	show_cpi();
     }
-#endif /* HAS_GUI */
+#endif
 
-}
-
-/* If dumpfile set nonNULL, lots of status info printed out */
-void sim_set_dumpfile(FILE *df)
-{
-    dumpfile = df;
-}
-
-/*
- * sim_log dumps a formatted string to the dumpfile, if it exists
- * accepts variable argument list
- */
-void sim_log( const char *format, ... ) {
-    if (dumpfile) {
-	va_list arg;
-	va_start( arg, format );
-	vfprintf( dumpfile, format, arg );
-	va_end( arg );
-    }
 }
 
 
 /*************************************************************
- * Part 3: This part contains simulation control for the TK
- * simulator. 
+ * Part 3: This part contains support for the GUI simulator
  *************************************************************/
 
 #ifdef HAS_GUI
@@ -538,16 +498,27 @@ static mem_t post_load_mem;
  **********************/
 
 
-/* function prototypes */
+/******************************************************************************
+ *	function declarations
+ ******************************************************************************/
+
 int simResetCmd(ClientData clientData, Tcl_Interp *interp,
 		int argc, char *argv[]);
+
 int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[]);
+
 int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[]);
+
 int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[]);
+
+int simModeCmd(ClientData clientData, Tcl_Interp *interp,
+	       int argc, char *argv[]);
+
 void addAppCommands(Tcl_Interp *interp);
+
 
 /******************************************************************************
  *	tcl command definitions
@@ -574,25 +545,25 @@ int simResetCmd(ClientData clientData, Tcl_Interp *interp,
 int simLoadCodeCmd(ClientData clientData, Tcl_Interp *interp,
 		   int argc, char *argv[])
 {
-    FILE *object_file;
+    FILE *code_file;
     word_t code_count;
     sim_interp = interp;
     if (argc != 2) {
 	interp->result = "One argument required";
 	return TCL_ERROR;
     }
-    object_file = fopen(argv[1], "r");
-    if (!object_file) {
+    code_file = fopen(argv[1], "r");
+    if (!code_file) {
 	sprintf(tcl_msg, "Couldn't open code file '%s'", argv[1]);
 	interp->result = tcl_msg;
 	return TCL_ERROR;
     }
     sim_reset();
-    code_count = load_mem(mem, object_file, 0);
+    code_count = load_mem(mem, code_file, 0);
     post_load_mem = copy_mem(mem);
     sprintf(tcl_msg, "%lld", code_count);
     interp->result = tcl_msg;
-    fclose(object_file);
+    fclose(code_file);
     return TCL_OK;
 }
 
@@ -626,8 +597,8 @@ int simLoadDataCmd(ClientData clientData, Tcl_Interp *interp,
 int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	      int argc, char *argv[])
 {
-    word_t step_limit = 1;
-    byte_t run_status;
+    word_t cycle_limit = 1;
+    byte_t status;
     cc_t cc;
     sim_interp = interp;
     if (argc > 2) {
@@ -635,16 +606,40 @@ int simRunCmd(ClientData clientData, Tcl_Interp *interp,
 	return TCL_ERROR;
     }
     if (argc >= 2 &&
-	(sscanf(argv[1], "%lld", &step_limit) != 1 ||
-	 step_limit < 0)) {
+	(sscanf(argv[1], "%lld", &cycle_limit) != 1 ||
+	 cycle_limit < 0)) {
 	sprintf(tcl_msg, "Cannot run for '%s' cycles!", argv[1]);
 	interp->result = tcl_msg;
 	return TCL_ERROR;
     }
-    sim_run(step_limit, &run_status, &cc);
-    interp->result = stat_name(run_status);
+    sim_run_pipe(cycle_limit + 5, cycle_limit, &status, &cc);
+    interp->result = stat_name(status);
     return TCL_OK;
 }
+
+int simModeCmd(ClientData clientData, Tcl_Interp *interp,
+	       int argc, char *argv[])
+{
+    sim_interp = interp;
+    if (argc != 2) {
+	interp->result = "One argument required";
+	return TCL_ERROR;
+    }
+    interp->result = argv[1];
+    if (strcmp(argv[1], "wedged") == 0)
+	sim_mode = S_WEDGED;
+    else if (strcmp(argv[1], "stall") == 0)
+	sim_mode = S_STALL;
+    else if (strcmp(argv[1], "forward") == 0)
+	sim_mode = S_FORWARD;
+    else {
+	sprintf(tcl_msg, "Unknown mode '%s'", argv[1]);
+	interp->result = tcl_msg;
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
 
 /******************************************************************************
  *	registering the commands with tcl
@@ -660,6 +655,8 @@ void addAppCommands(Tcl_Interp *interp)
     Tcl_CreateCommand(interp, "simData", (Tcl_CmdProc *) simLoadDataCmd,
 		      (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "simRun", (Tcl_CmdProc *) simRunCmd,
+		      (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateCommand(interp, "setSimMode", (Tcl_CmdProc *) simModeCmd,
 		      (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 } 
 
@@ -753,6 +750,47 @@ void show_cc(cc_t cc)
     }
 }
 
+/* Provide mechanism for simulator to update status display */
+void show_stat(stat_t stat)
+{
+    int code;
+    sprintf(tcl_msg, "showStat %s", stat_name(stat));
+    code = Tcl_Eval(sim_interp, tcl_msg);
+    if (code != TCL_OK) {
+	fprintf(stderr, "Failed to display status\n");
+	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
+    }
+}
+
+
+
+/* Provide mechanism for simulator to update performance information */
+void show_cpi() {
+    int code;
+    double cpi = instructions > 0 ? (double) cycles/instructions : 1.0;
+    sprintf(tcl_msg, "showCPI %lld %lld %.2f",
+	    cycles, instructions, (double) cpi);
+    code = Tcl_Eval(sim_interp, tcl_msg);
+    if (code != TCL_OK) {
+	fprintf(stderr, "Failed to display CPI\n");
+	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
+    }
+}
+
+char *rname[] = {"none", "ea", "eb", "me", "wm", "we"};
+
+/* provide mechanism for simulator to specify source registers */
+void signal_sources() {
+    int code;
+    sprintf(tcl_msg, "showSources %s %s",
+	    rname[amux], rname[bmux]);
+    code = Tcl_Eval(sim_interp, tcl_msg);
+    if (code != TCL_OK) {
+	fprintf(stderr, "Failed to signal forwarding sources\n");
+	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
+    }
+}
+
 /* Provide mechanism for simulator to clear register display */
 void signal_register_clear() {
     int code;
@@ -778,45 +816,75 @@ void report_line(word_t line_no, word_t addr, char *hex, char *text) {
 }
 
 
-/* Provide mechanism for simulator to report which instruction
-   is being executed */
-void report_pc(word_t pc)
+/* Provide mechanism for simulator to report which instructions are in
+   which stages */
+void report_pc(unsigned fpc, unsigned char fpcv,
+	       unsigned dpc, unsigned char dpcv,
+	       unsigned epc, unsigned char epcv,
+	       unsigned mpc, unsigned char mpcv,
+	       unsigned wpc, unsigned char wpcv)
 {
-    int t_status;
-    char addr[18];
-    char code[20];
+    int status;
+    char addr[10];
+    char code[12];
     Tcl_DString cmd;
     Tcl_DStringInit(&cmd);
     Tcl_DStringAppend(&cmd, "simLabel ", -1);
     Tcl_DStringStartSublist(&cmd);
-    sprintf(addr, "%llu", pc);
-    Tcl_DStringAppendElement(&cmd, addr);
-
+    if (fpcv) {
+	sprintf(addr, "%u", fpc);
+	Tcl_DStringAppendElement(&cmd, addr);
+    }
+    if (dpcv) {
+	sprintf(addr, "%u", dpc);
+	Tcl_DStringAppendElement(&cmd, addr);
+    }
+    if (epcv) {
+	sprintf(addr, "%u", epc);
+	Tcl_DStringAppendElement(&cmd, addr);
+    }
+    if (mpcv) {
+	sprintf(addr, "%u", mpc);
+	Tcl_DStringAppendElement(&cmd, addr);
+    }
+    if (wpcv) {
+	sprintf(addr, "%u", wpc);
+	Tcl_DStringAppendElement(&cmd, addr);
+    }
     Tcl_DStringEndSublist(&cmd);
     Tcl_DStringStartSublist(&cmd);
-    sprintf(code, "%s","*");
+    sprintf(code, "%s %s %s %s %s",
+	    fpcv ? "F" : "",
+	    dpcv ? "D" : "",
+	    epcv ? "E" : "",
+	    mpcv ? "M" : "",
+	    wpcv ? "W" : "");
     Tcl_DStringAppend(&cmd, code, -1);
     Tcl_DStringEndSublist(&cmd);
-    t_status = Tcl_Eval(sim_interp, Tcl_DStringValue(&cmd));
-    if (t_status != TCL_OK) {
-	fprintf(stderr, "Failed to report code '%s'\n", code);
+    /* Debug 
+       fprintf(stderr, "Code '%s'\n", Tcl_DStringValue(&cmd));
+    */
+    status = Tcl_Eval(sim_interp, Tcl_DStringValue(&cmd));
+    if (status != TCL_OK) {
+	fprintf(stderr, "Failed to report pipe code '%s'\n", code);
 	fprintf(stderr, "Error Message was '%s'\n", sim_interp->result);
     }
 }
 
-/* Report single line of stage state */
-void report_state(char *id, char *txt)
+/* Report single line of pipeline state */
+void report_state(char *id, word_t current, char *txt)
 {
-    int t_status;
-    sprintf(tcl_msg, "updateStage %s {%s}", id, txt);
-    t_status = Tcl_Eval(sim_interp, tcl_msg);
-    if (t_status != TCL_OK) {
-	fprintf(stderr, "Failed to report processor status\n");
-	fprintf(stderr, "\tStage %s, status '%s'\n",
-		id, txt);
+    int status;
+    sprintf(tcl_msg, "updateStage %s %lld {%s}", id, current,txt);
+    status = Tcl_Eval(sim_interp, tcl_msg);
+    if (status != TCL_OK) {
+	fprintf(stderr, "Failed to report pipe status\n");
+	fprintf(stderr, "\tStage %s.%s, status '%s'\n",
+		id, current ? "current" : "next", txt);
 	fprintf(stderr, "\tError Message was '%s'\n", sim_interp->result);
     }
 }
+
 
 /*
  * Tcl_AppInit - Called by TCL to perform application-specific initialization.
@@ -847,5 +915,120 @@ int Tcl_AppInit(Tcl_Interp *interp)
 
 }
 
- 
 #endif /* HAS_GUI */
+
+
+/**************************************************************
+ * Part 4: Code for implementing pipelined processor simulators
+ *************************************************************/
+
+/******************************************************************************
+ *	defines
+ ******************************************************************************/
+
+#define MAX_STAGE 10
+
+/******************************************************************************
+ *	static variables
+ ******************************************************************************/
+
+static pipe_ptr pipes[MAX_STAGE];
+static int pipe_count = 0;
+
+/******************************************************************************
+ *	function definitions
+ ******************************************************************************/
+
+/* Create new pipe with count bytes of state */
+/* bubble_val indicates state corresponding to pipeline bubble */
+pipe_ptr new_pipe(int count, void *bubble_val)
+{
+  pipe_ptr result = (pipe_ptr) malloc(sizeof(pipe_ele));
+  result->current = malloc(count);
+  result->next = malloc(count);
+  memcpy(result->current, bubble_val, count);
+  memcpy(result->next, bubble_val, count);
+  result->count = count;
+  result->op = P_LOAD;
+  result->bubble_val = bubble_val;
+  pipes[pipe_count++] = result; 
+  return result;
+}
+
+/* Update all pipes */
+void update_pipes()
+{
+  int s;
+  for (s = 0; s < pipe_count; s++) {
+    pipe_ptr p = pipes[s];
+    switch (p->op)
+      {
+      case P_BUBBLE:
+      	/* insert a bubble into the next stage */
+      	memcpy(p->current, p->bubble_val, p->count);
+      	break;
+      
+      case P_LOAD:
+      	/* copy calculated state from previous stage */
+      	memcpy(p->current, p->next, p->count);
+      	break;
+      case P_ERROR:
+	  /* Like a bubble, but insert error condition */
+      	memcpy(p->current, p->bubble_val, p->count);
+      	break;
+      case P_STALL:
+      default:
+      	/* do nothing: next stage gets same instr again */
+      	;
+      }
+    if (p->op != P_ERROR)
+	p->op = P_LOAD;
+  }
+}
+
+/* Set all pipes to bubble values */
+void clear_pipes()
+{
+  int s;
+  for (s = 0; s < pipe_count; s++) {
+    pipe_ptr p = pipes[s];
+    memcpy(p->current, p->bubble_val, p->count);
+    memcpy(p->next, p->bubble_val, p->count);
+    p->op = P_LOAD;
+  }
+}
+
+/******************** Utility Code *************************/
+
+/* Representations of digits */
+static char digits[16] =
+   {'0', '1', '2', '3', '4', '5', '6', '7',
+    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+/* Print hex/oct/binary format with leading zeros */
+/* bpd denotes bits per digit  Should be in range 1-4,
+   pbw denotes bits per word.*/
+void wprint(uword_t x, int bpd, int bpw, FILE *fp)
+{
+  int digit;
+  uword_t mask = ((uword_t) 1 << bpd) - 1;
+  for (digit = (bpw-1)/bpd; digit >= 0; digit--) {
+    uword_t val = (x >> (digit * bpd)) & mask;
+    putc(digits[val], fp);
+  }
+}
+
+/* Create string in hex/oct/binary format with leading zeros */
+/* bpd denotes bits per digit  Should be in range 1-4,
+   pbw denotes bits per word.*/
+void wstring(uword_t x, int bpd, int bpw, char *str)
+{
+  int digit;
+  uword_t mask = ((uword_t) 1 << bpd) - 1;
+  for (digit = (bpw-1)/bpd; digit >= 0; digit--) {
+    uword_t val = (x >> (digit * bpd)) & mask;
+    *str++ = digits[val];
+  }
+  *str = '\0';
+}
+

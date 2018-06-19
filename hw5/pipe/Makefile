@@ -1,6 +1,6 @@
-# Modify this line to indicate the default version
+# Modify this line to indicate the default version to build
 
-VERSION=full
+VERSION=stall
 
 # Comment this out if you don't have Tcl/Tk on your system
 
@@ -33,23 +33,16 @@ MISCDIR=../misc
 HCL2C=$(MISCDIR)/hcl2c
 INC=$(TKINC) -I$(MISCDIR) $(GUIMODE)
 LIBS=$(TKLIBS) -lm
-YAS=../misc/yas
+YAS = ../misc/yas
 
-all: ssim
+all: psim 
 
-# This rule builds the SEQ simulator (ssim)
-ssim: seq-$(VERSION).hcl ssim.c ssimcore.c sim.h $(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(MISCDIR)/isa.h
-	# Building the seq-$(VERSION).hcl version of SEQ
-	$(HCL2C) -n seq-$(VERSION).hcl <seq-$(VERSION).hcl >seq-$(VERSION).c
-	$(CC) $(CFLAGS) $(INC) -o ssim \
-		seq-$(VERSION).c ssim.c ssimcore.c $(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(LIBS)
-
-# This rule builds the SEQ+ simulator (ssim+)
-ssim+: seq+-std.hcl ssim.c sim.h $(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(MISCDIR)/isa.h 
-	# Building the seq+-std.hcl version of SEQ+
-	$(HCL2C) -n seq+-std.hcl <seq+-std.hcl >seq+-std.c
-	$(CC) $(CFLAGS) $(INC) -o ssim+ \
-		seq+-std.c ssim.c $(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(LIBS)
+# This rule builds the PIPE simulator
+psim: psim.c psimcore.c sim.h pipe-$(VERSION).hcl $(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(MISCDIR)/isa.h
+	# Building the pipe-$(VERSION).hcl version of PIPE
+	$(HCL2C) -n pipe-$(VERSION).hcl < pipe-$(VERSION).hcl > pipe-$(VERSION).c
+	$(CC) $(CFLAGS) $(INC) -o psim psim.c psimcore.c pipe-$(VERSION).c \
+		$(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(LIBS)
 
 # These are implicit rules for assembling .yo files from .ys files.
 .SUFFIXES: .ys .yo
@@ -58,8 +51,6 @@ ssim+: seq+-std.hcl ssim.c sim.h $(MISCDIR)/isa.c $(MISCDIR)/isacore.c $(MISCDIR
 
 
 clean:
-	rm -f ssim ssim+ seq*-*.c *.o *~ *.exe *.yo *.ys *.out
-
-
+	rm -f psim pipe-*.c *.o *.exe *~ 
 
 

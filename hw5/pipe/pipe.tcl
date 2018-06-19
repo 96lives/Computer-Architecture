@@ -1,4 +1,3 @@
-
 ##########################################################################
 # Parsing of command line flags                                          #
 ##########################################################################
@@ -20,7 +19,7 @@ proc findFlag {flag} {
 }
 
 ##########################################################################
-# Register File Implementation.  Shown as array of 8 columns             #
+# Register File Implementation.  Shown as array of 3 X 5                 #
 ##########################################################################
 
 
@@ -40,6 +39,7 @@ set specialBg LightSkyBlue
 
 # Height of titles separating major sections of control panel
 set sectionHeight 2
+
 
 # How many rows of code do I display
 set codeRowCount [flagVal "r" 50]
@@ -81,31 +81,64 @@ proc setCC {zv cv ov} {
     .cc.cc2 config -text [format %d $ov]
 }
 
+# Set CPI display
+proc showCPI {cycles instructions cpi} {
+    .cpi.cyc config -text [format %d $cycles]
+    .cpi.instr config -text [format %d $instructions]
+    .cpi.cpi config -text [format %.2f $cpi]
+}
 
-### Create display for misc. state
-frame .flags
-pack .flags -in . -side bottom
+# Set status display
+proc showStat {s} {
+    .stat.val config -text $s
+}
+
+##############################################################################
+# CPI Display
+##############################################################################
+# Create Window for CPI display 
+frame .cpi
+pack .cpi -in . -side bottom
+
+label .cpi.lab -text "Performance" -font $bigLabFont -height $sectionHeight
+pack .cpi.lab -in .cpi -side left
+
+label .cpi.clab -text "Cycles" -font $labFont
+pack .cpi.clab -in .cpi -side left
+label .cpi.cyc -text "0" -width 6 -font $dpyFont -relief ridge -bg $normalBg
+pack .cpi.cyc -in .cpi -side left
+
+label .cpi.ilab -text "Instructions" -font $labFont
+pack .cpi.ilab -in .cpi -side left
+label .cpi.instr -text "0" -width 6 -font $dpyFont -relief ridge -bg $normalBg
+pack .cpi.instr -in .cpi -side left
+
+label .cpi.cpilab -text "CPI" -font $labFont
+pack .cpi.cpilab -in .cpi -side left
+label .cpi.cpi -text "1.0" -width 5 -font $dpyFont -relief ridge -bg $normalBg
+pack .cpi.cpi -in .cpi -side left
 
 ##############################################################################
 # Status Display                                                             #
 ##############################################################################
-
-set simStat "AOK"
-# Line to display simulation status
+# Create Window for processor status (packed next to condition codes)
 frame .stat
-pack .stat -in .flags -side left
-label .stat.statlab -width 7 -text "Stat" -font $bigLabFont -height $sectionHeight
-label .stat.statdpy -width 3 -font $dpyFont -relief ridge -bg white -textvariable simStat
+pack .stat -in . -side bottom
+
+label .stat.lab -text "Stat"  -width 7 -font $bigLabFont -height $sectionHeight
+label .stat.val -width 3 -font $dpyFont -relief ridge -bg $normalBg
 label .stat.fill -width 6 -text ""
-pack .stat.statlab .stat.statdpy .stat.fill  -in .stat -side left
+pack .stat.lab .stat.val .stat.fill -in .stat -side left
+
+
 ##############################################################################
 # Condition Code Display                                                     #
 ##############################################################################
 # Create Window for condition codes
 frame .cc
-pack .cc -in .flags -side right
+pack .cc -in .stat -side left
 
-label .cc.lab -text "Condition Codes" -font $bigLabFont -height $sectionHeight
+label .cc.lab -text "Condition Codes"  -font $bigLabFont -height $sectionHeight
 pack .cc.lab -in .cc -side left
 
 
@@ -174,10 +207,10 @@ for {set j 0} {$j < 3} {incr j 1} {
 
 }
 
+
 ##############################################################################
 #  Main Control Panel                                                        #
 ##############################################################################
-
 #
 # Set the simulator name (defined in simname in ssim.c) 
 # as the title of the main window
@@ -185,7 +218,7 @@ for {set j 0} {$j < 3} {incr j 1} {
 wm title . $simname
 
 # Control Panel for simulator
-set cntlBW 11
+set cntlBW 12
 frame .cntl
 pack .cntl
 button .cntl.quit -width $cntlBW -text Quit -command exit
@@ -202,17 +235,19 @@ pack .spd
 # Simulation mode 
 set simMode forward
 
-# frame .md
-# pack .md
-# radiobutton .md.wedged -text Wedged -variable simMode \
-# 	-value wedged -width 10 -command {setSimMode wedged}
-# radiobutton .md.stall -text Stall -variable simMode \
-# 	-value stall -width 10 -command {setSimMode stall}
-# radiobutton .md.forward -text Forward -variable simMode \
-# 	-value forward -width 10 -command {setSimMode forward}
-# pack .md.wedged .md.stall .md.forward -in .md -side left
+frame .md
+### Old Simulation mode stuff
+#pack .md
+#radiobutton .md.wedged -text Wedged -variable simMode \
+#	-value wedged -width 10 -command {setSimMode wedged}
+#radiobutton .md.stall -text Stall -variable simMode \
+#	-value stall -width 10 -command {setSimMode stall}
+#radiobutton .md.forward -text Forward -variable simMode \
+#	-value forward -width 10 -command {setSimMode forward}
+#pack .md.wedged .md.stall .md.forward -in .md -side left
 
-# simDelay defines #milliseconds for each cycle of simulator
+
+# simDelay defines number of milliseconds for each cycle of simulator
 # Initial value is 1000ms
 set simDelay 1000
 # Set delay based on rate expressed in log(Hz)
@@ -252,13 +287,17 @@ proc simGo {} {
 }
 
 ##############################################################################
-#  Processor State display                                                   #
+#  Pipe Register Display                                                     #
 ##############################################################################
 
+# Colors for Highlighting Data Sources
+set valaBg LightPink
+set valbBg PaleGreen1
+
 # Overall width of pipe register display
-set procWidth 60
-set procHeight 1
-set labWidth 8
+set pipeWidth 72
+set pipeHeight 2
+set labWidth 5
 
 # Add labeled display to window 
 proc addDisp {win width name} {
@@ -267,9 +306,10 @@ proc addDisp {win width name} {
     frame $win.$lname
     pack $win.$lname -in $win -side left
     label $win.$lname.t -text $name -font $labFont
+    label $win.$lname.n -width $width -font $dpyFont -bg lightgray -fg Black
     label $win.$lname.c -width $width -font $dpyFont -bg white -relief ridge
-    pack $win.$lname.t $win.$lname.c -in $win.$lname -side top
-    return [list $win.$lname.c]
+    pack $win.$lname.t $win.$lname.c $win.$lname.n -in $win.$lname -side top
+    return [list $win.$lname.n $win.$lname.c]
 }
 
 # Set text in display row
@@ -281,29 +321,54 @@ proc setDisp {wins txts} {
     }
 }
 
-frame .p -width $procWidth 
+frame .p -width $pipeWidth 
 pack .p -in . -side bottom
-label .p.lab -text "Processor State" -font $bigLabFont -height $sectionHeight
+label .p.lab -text "Pipeline Registers" -font $bigLabFont -height $sectionHeight
 pack .p.lab -in .p -side top
-label .p.pc -text "PC Update Stage" -height $procHeight -font $bigLabFont -width $procWidth -bg NavyBlue -fg White
-#label .p.wb -text "Writeback Stage" -height $procHeight -font $bigLabFont -width $procWidth -bg NavyBlue -fg White
-label .p.mem -text "Memory Stage" -height $procHeight -font $bigLabFont -width $procWidth -bg NavyBlue -fg White
-label .p.ex -text "Execute Stage" -height $procHeight -font $bigLabFont -width $procWidth -bg NavyBlue -fg White
-label .p.id -text "Decode Stage" -height $procHeight -font $bigLabFont -width $procWidth -bg NavyBlue -fg White
-label .p.if -text "Fetch Stage" -height $procHeight -font $bigLabFont -width $procWidth -bg NavyBlue -fg White
-# New PC
-frame .p.npc
-# Mem
-frame .p.m
-# Execute
+label .p.mem -text "Memory Stage" -height $pipeHeight -width $pipeWidth -bg NavyBlue -fg White -font $bigLabFont
+label .p.ex -text "Execute Stage" -height $pipeHeight -width $pipeWidth -bg NavyBlue -fg White -font $bigLabFont
+label .p.id -text "Decode Stage" -height $pipeHeight -width $pipeWidth -bg NavyBlue -fg White -font $bigLabFont
+label .p.if -text "Fetch Stage" -height $pipeHeight -width $pipeWidth -bg NavyBlue -fg White -font $bigLabFont
+frame .p.mw 
+frame .p.em
+frame .p.de
+frame .p.fd
+frame .p.pc
 frame .p.e
-# Decode
-frame .p.d
-# Fetch
-frame .p.f
-# Old PC
-frame .p.opc
-pack .p.npc .p.pc .p.m .p.mem .p.e .p.ex .p.d .p.id .p.f .p.if .p.opc -in .p -side top -anchor w -expand 1
+pack .p.mw .p.mem .p.em .p.ex .p.e .p.de .p.id .p.fd .p.if .p.pc -in .p -side top -anchor w -expand 1
+
+proc addLabel { win nstage cstage } {
+    global labWidth labFont bigLabFont
+    frame $win.lab
+    label $win.name -text "$cstage" -width $labWidth -font $bigLabFont
+    pack $win.name -in $win.lab -side left
+
+    label $win.lab.t  -text " " -font $labFont 
+    label $win.lab.n -width $labWidth  -text "Input" -anchor w
+    label $win.lab.c -width $labWidth  -text "State" -anchor w
+    pack  $win.lab.t $win.lab.c $win.lab.n -in $win.lab -side top
+    pack $win.lab -in $win -side left
+}
+
+addLabel .p.mw M W
+addLabel .p.em E M
+addLabel .p.de D E
+addLabel .p.fd F D
+addLabel .p.pc "" F
+
+proc addFill { win w } {
+    frame $win.fill
+    label $win.fill.t -text "" -width $w -bg lightgray
+    label $win.fill.n -bg white -text "" -width $w -bg lightgray
+    label $win.fill.c -bg white -text "" -width $w -bg lightgray
+    pack $win.fill.c $win.fill.t $win.fill.n -in $win.fill -side top -expand 1
+    pack $win.fill -in $win -side right -expand 1
+}
+
+addFill .p.mw 0
+addFill .p.de 0
+addFill .p.fd 0
+addFill .p.pc 0
 
 # Take list of lists, and transpose nesting
 # Assumes all lists are of same length
@@ -320,56 +385,83 @@ proc ltranspose {inlist} {
     return $result
 }
 
-# Fields in PC displayed
-# Total size = 16 
-set pwins(OPC) [ltranspose [list [addDisp .p.opc 16 PC]]]
-
-# Fetch display
-# Total size = 6+4+4+16+16 = 46
-set pwins(F) [ltranspose \
-           [list [addDisp .p.f 6 Instr] \
-	         [addDisp .p.f 4 rA]\
-	         [addDisp .p.f 4 rB] \
-                 [addDisp .p.f 16 valC] \
-		 [addDisp .p.f 16 valP]]] 
-
-# Decode Display
-# Total size = 16+16+4+4+4+4 = 48
-set pwins(D) [ltranspose \
-           [list \
-		 [addDisp .p.d 16 valA] \
-		 [addDisp .p.d 16 valB] \
-		 [addDisp .p.d 4 dstE] \
-		 [addDisp .p.d 4 dstM] \
-                 [addDisp .p.d 4 srcA] \
-		 [addDisp .p.d 4 srcB]]]
-
-
-
-
-# Execute Display
+# Fields in F display
 # Total size = 3+16 = 19
+set pwins(F) [ltranspose [list [addDisp .p.pc 3 Stat] \
+                                [addDisp .p.pc 16 predPC]]]
+
+# Fields in D display
+# Total size = 3+6+4+4+16+16 = 49
+set pwins(D) [ltranspose \
+           [list [addDisp .p.fd 3 Stat]   \
+	         [addDisp .p.fd 6 Instr] \
+	         [addDisp .p.fd 4 rA] \
+	         [addDisp .p.fd 4 rB] \
+                 [addDisp .p.fd 16 valC] \
+		 [addDisp .p.fd 16 valP]]] 
+
+# Fields in E Display
+# Total size = 3+6+16+16+16+4+4+4+4 = 73
 set pwins(E) [ltranspose \
-           [list [addDisp .p.e 3 Cnd] \
-		 [addDisp .p.e 16 valE]]]
+           [list [addDisp .p.de 3 Stat] \
+	         [addDisp .p.de 6 Instr] \
+		 [addDisp .p.de 16 valC] \
+		 [addDisp .p.de 16 valA] \
+		 [addDisp .p.de 16 valB] \
+		 [addDisp .p.de 4 dstE] \
+		 [addDisp .p.de 4 dstM] \
+		 [addDisp .p.de 4 srcA] \
+		 [addDisp .p.de 4 srcB]]]
 
-# Memory Display
-# Total size = 16
+# Fields in M Display
+# Total size = 3+6+3+16+16+4+4 = 52
 set pwins(M) [ltranspose \
-           [list [addDisp .p.m 16 valM]]]
+           [list [addDisp .p.em 3 Stat] \
+	         [addDisp .p.em 6 Instr] \
+	         [addDisp .p.em 3 Cnd] \
+		 [addDisp .p.em 16 valE] \
+		 [addDisp .p.em 16 valA] \
+		 [addDisp .p.em 4 dstE] \
+		 [addDisp .p.em 4 dstM]]]
+# Fields in W display
+# Total size = 3+6+16+16+4+4 = 49
+set pwins(W) [ltranspose \
+           [list [addDisp .p.mw 3 Stat] \
+	         [addDisp .p.mw 6 Instr] \
+		 [addDisp .p.mw 16 valE] \
+		 [addDisp .p.mw 16 valM] \
+		 [addDisp .p.mw 4 dstE] \
+		 [addDisp .p.mw 4 dstM]]]
 
-# New PC Display
-# Total Size = 16
-set pwins(NPC) [ltranspose \
-           [list [addDisp .p.npc 16 newPC]]]
-
-# update status line for specified proc register
-proc updateStage {name txts} {
+# update status line for specified pipe register
+proc updateStage {name current txts} {
     set Name [string toupper $name]
     global pwins
-    set wins [lindex $pwins($Name) 0]
+    set wins [lindex $pwins($Name) $current]
     setDisp $wins $txts
 }   
+
+# Create Array of windows corresponding to data sources
+set rwins(wm) .p.mw.valm.c
+set rwins(we) .p.mw.vale.c
+set rwins(me) .p.em.vale.c
+set rwins(ea) .p.de.vala.c
+set rwins(eb) .p.de.valb.c
+
+# Highlight Data Source Registers for valA, valB
+proc showSources { a b } {
+    global rwins valaBg valbBg 
+    # Set them all to white
+    foreach w [array names rwins] {
+	$rwins($w) config -bg White
+    }
+    if {$a != "none"} { $rwins($a) config -bg $valaBg }
+    if {$b != "none"} { $rwins($b) config -bg $valbBg }
+
+    # Indicate forwarding destinations by their color
+    .p.de.vala.t config -bg $valaBg
+    .p.de.valb.t config -bg $valbBg
+}
 
 ##########################################################################
 #                    Instruction Display                                 #
@@ -395,6 +487,7 @@ proc createCode {} {
     # Create Code Structure
     frame .c.t
     pack .c.t -in .c -side top -anchor w
+    # Support up to 4 columns of code, each $codeRowCount lines long
     frame .c.tr
     pack .c.tr -in .c.t -side top -anchor nw
 }
@@ -452,8 +545,8 @@ proc simResetAll {} {
     global simStat
     set simStat "AOK"
     simReset
-    simLabel {} {}
     clearMem
+    simLabel {} {}
 }
 
 ###############################################################################

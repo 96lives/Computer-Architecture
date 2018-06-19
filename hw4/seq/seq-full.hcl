@@ -96,6 +96,7 @@ boolsig dmem_error 'dmem_error'		# Error signal from data memory
 
 ################ Fetch Stage     ###################################
 
+#word mem_byte = (icode in {IRMMOVQ, IMRMOVQ} && ifun == 1);
 # Determine instruction code
 word icode = [
 	imem_error: INOP;
@@ -165,7 +166,7 @@ word dstM = [
 ################ Execute Stage   ###################################
 
 
-word gen_mem_byte = [
+word mem_byte = [
 	icode in { IMRMOVQ, IRMMOVQ } : ifun;
 ];
 

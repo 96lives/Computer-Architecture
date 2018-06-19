@@ -118,9 +118,11 @@ word_t gen_mem_byte();
 word_t gen_Stat();
 word_t gen_new_pc();
 
+/*
 word_t gen_mem_byte() {
     return ( ( (icode == I_MRMOVQ) || (icode == I_RMMOVQ) ) && (ifun == 1) );
 }
+*/
 
 
 /* Log file */
