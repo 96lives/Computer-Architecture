@@ -43,12 +43,9 @@ HL64 Uadd64 (HL64 a, HL64 b)
 HL64 Usub64 (HL64 a, HL64 b)
 {
 	HL64 	x;
-    HL64 *big = (a.hi > b.hi) ? a : ((a.lo > b.lo) ? a : b)
-    HL74 *small = (big == &
-
-
-
-
+    x.lo = a.lo - b.lo;
+    b.hi = (a.lo - b.lo > a.lo)? b.hi + 1 : b.hi;
+    x.hi = a.hi - b.hi;
 
 	return x;
 }
@@ -58,13 +55,36 @@ HL64 Usub64 (HL64 a, HL64 b)
 // a and b, respectively.  In the following example, x.hi and x.lo should
 // have the upper and lower 32 bits of (A * B), respectively.
 
+HL64 Umul32(u32 a, u32 b) {
+    HL64 x;
+    u32 mask = 0xFFFF;
+
+    u32 hh = (a >> 16) * (b >> 16);
+    u32 hl = (a >> 16) * (b & mask);
+    u32 lh = (a & mask) * (b >> 16);
+    u32 ll = (a & mask) * (b & mask);
+
+    x.hi = hh + (hl >> 16) + (lh >> 16);
+    u32 temp = ((hl & mask) << 16) + ((lh & mask) << 16);
+    if ( (temp < ((hl & mask) << 16) ) || (temp < ((lh & mask) << 16) ) )
+        x.hi += 1;
+    x.lo = temp + ll;
+    if ( (x.lo < temp) || (x.lo < ll) )
+        x.hi += 1;
+
+    return x;
+}
+
 HL64 Umul64 (HL64 a, HL64 b)
 {
 	HL64 	x;
 
+    HL64 ll = Umul32(a.lo, b.lo);
+    HL64 hl = Umul32(a.hi, b.lo);
+    HL64 lh = Umul32(a.lo, b.hi);
 
-
-
+    x.lo = ll.lo;
+    x.hi = ll.hi + hl.lo + lh.lo;
 
 	return x;
 }
