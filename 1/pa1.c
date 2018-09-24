@@ -30,8 +30,9 @@ HL64 Uadd64 (HL64 a, HL64 b)
 {
 	HL64 	x;
     x.lo = a.lo + b.lo;
-    x.hi = ( (a.lo >> 16) + (b.lo >> 16) ) >> 16;
-    x.hi += a.hi + b.hi;
+    x.hi = a.hi + b.hi;
+    if (x.lo < a.lo || x.lo < b.lo)
+        x.hi += 1;
 	return x;
 }
 
