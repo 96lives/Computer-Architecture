@@ -121,13 +121,75 @@ int tinyfp2int(tinyfp x){
 
 }
 
+union Data {
+    float f;
+    unsigned int u;
+    tinyfp tf;
+};
 
 tinyfp float2tinyfp(float x){
 
+    if ( (x >= 248) || (x == 1.0/0.0) )
+        return TF_INF;
+    else if ( (x <= -248) || (x == -1.0/0.0) )
+      return TF_NINF;
 
+   // check +-nan
+    if (x != x) {
+        union Data d;
+        d.f = x;
+        if (d.u >> 31 == 1)
+            return TF_INF + 7 + (1 << 7);
+        return TF_INF + 7;
+    }
 
+   // check sign
+    tinyfp res;
+    if (x >= 0)
+        res = 0;
+    else {
+        res = 1 << 7;
+        x = -x;
+    }
 
-	    return 2;
+    // check denormalized
+    if (x < 0.015625) {
+        float sd = 0.001953125;
+        if (x < sd)
+            res = res | 0b00000000;
+        else if (x < 2 * sd)
+            res = res | 0b00000001;
+        else if (x < 3 * sd)
+            res = res | 0b00000010;
+        else if (x < 4 * sd)
+            res = res | 0b00000011;
+        else if (x < 5 * sd)
+            res = res | 0b00000100;
+        else if (x < 6 * sd)
+            res = res | 0b00000101;
+        else if (x < 7 * sd)
+            res = res | 0b00000110;
+        else
+            res = res | 0b00000111;
+        return res;
+    }
+
+    union Data d;
+    d.f = x;
+    union Data exp;
+    unsigned int bias_diff = 127 - 7;
+    exp.u = d.u;
+    exp.u = (exp.u << 1) >> 24;
+    exp.u = exp.u - bias_diff;
+    exp.u = exp.u << 3;
+    res = res | exp.tf;
+
+    union Data frac;
+    frac.f = x;
+    frac.u = (frac.u << 9) >> 29;
+    res = res | frac.tf;
+
+    return res;
 }
 
 float frac_pow2(int n) {
