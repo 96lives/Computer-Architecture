@@ -15,15 +15,13 @@
 
 #include <stdio.h>
 #include "pa2.h"
-#include <limits.h>
 
 tinyfp TF_INF = 0b01111000;
 tinyfp TF_NINF = 0b11111000;
 
+int INT_MIN = –2147483648;
 tinyfp EXP_MASK = 0b01111000;
 tinyfp FRAC_MASK = 0b00000111;
-int TMIN = INT_MIN;
-int TMAX = INT_MAX;
 
 // poisitve integer binary to tinyfp
 tinyfp posint2tinyfp(int x){
