@@ -75,9 +75,9 @@ tinyfp int2tinyfp(int x){
     tinyfp temp;
     tinyfp shift = 7;
 
-    if (x > 240)
+    if (x > 247)
         return TFMAX;
-    else if (x < -240)
+    else if (x < -247)
         return TFMIN;
     else if (x == 0)
         return 0;
