@@ -19,6 +19,9 @@
 
 tinyfp TF_INF = 0b01111000;
 tinyfp TF_NINF = 0b11111000;
+
+tinyfp EXP_MASK = 0b01111000;
+tinyfp FRAC_MASK = 0b00000111;
 int TMIN = INT_MIN;
 int TMAX = INT_MAX;
 
@@ -89,10 +92,8 @@ tinyfp int2tinyfp(int x){
 
 int pow2(int n) {
     unsigned int res = 1;
-    if (n > 0)
+    if (n >= 0)
         return res << ((unsigned int) n);
-    else if (n == 0)
-        return 1;
     return 0;
 }
 
@@ -111,9 +112,8 @@ int tinyfp2int(tinyfp x){
     if (exponent < 7)
         return 0;
     for (i = 0; i <= 3; ++i) {
-        if ((frac & (1 << i)) != 0){
+        if ((frac & (1 << i)) != 0)
             res += pow2( ((int)exponent) - 10 + i);
-        }
     }
     if ((x >> 7) == 1)
         res *= -1;
@@ -130,11 +130,49 @@ tinyfp float2tinyfp(float x){
 	    return 2;
 }
 
+float frac_pow2(int n) {
+    unsigned int pos_res = 1;
+    float res = 1;
+    int i = 0;
+    if (n >= 0)
+        return (float)(pos_res << ((unsigned int) n) );
+    n = -n;
+    for (i = 0; i < n; ++i)
+        res /= 2;
+    return res;
+}
+
 
 float tinyfp2float(tinyfp x){
+    int exponent = (int)((x & EXP_MASK)>>3);
+    tinyfp frac = x & FRAC_MASK;
+    float f = 0;
+    int i = 0;
 
+    // check INF and NAN
+    if ((x & EXP_MASK) == 0b01111000){
+        if ((x & FRAC_MASK) != 0)
+            return ((x >> 7) == 1) ? -0.0/0.0 : 0.0/0.0;
+        if (x == TF_INF)
+            return 1.0/0.0;
+        else
+            return -1.0/0.0;
+    }
 
+    // check normalized
+    if (exponent == 0)
+        exponent = -6;
+    else {
+        exponent -= 7;
+        frac += 0b00001000;
+    }
 
-	    return 2.0;
+    for (i = 0; i < 4; ++i){
+        if ((frac & (1 << i)) != 0)
+            f += frac_pow2(exponent - 3 + i);
+    }
+    if ((x >> 7) == 1)
+        f *= -1;
+	return f;
 }
 
