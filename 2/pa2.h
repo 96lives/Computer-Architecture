@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
-// 
+//
 //  4190.308 Computer Architecture (Fall 2018)
 //
 //  Project #2: TinyFP (8-bit floating point) Representation
@@ -18,7 +18,6 @@
 
 typedef unsigned char tinyfp;
 
-
 // cast int to tinyfp
 tinyfp int2tinyfp(int x);
 
@@ -30,7 +29,6 @@ tinyfp float2tinyfp(float x);
 
 // cast tinyfp to float
 float tinyfp2float(tinyfp x);
-
 
 
 #endif // _PA_2_H
