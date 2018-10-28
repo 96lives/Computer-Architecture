@@ -15,18 +15,12 @@
 
 #include <stdio.h>
 #include "pa2.h"
-#include <stdbool.h>
+#include <limits.h>
 
-tinyfp TFMAX = 0b01111000;
-tinyfp TFMIN = 0b11111000;
-tinyfp MASK0 = 0b00000001;
-tinyfp MASK1 = 0b00000010;
-tinyfp MASK2 = 0b00000100;
-tinyfp MASK3 = 0b00001000;
-tinyfp MASK4 = 0b00010000;
-tinyfp MASK5 = 0b00100000;
-tinyfp MASK6 = 0b01000000;
-tinyfp MASK7 = 0b10000000;
+tinyfp TF_INF = 0b01111000;
+tinyfp TF_NINF = 0b11111000;
+int TMIN = INT_MIN;
+int TMAX = INT_MAX;
 
 // poisitve integer binary to tinyfp
 tinyfp posint2tinyfp(int x){
@@ -76,9 +70,9 @@ tinyfp int2tinyfp(int x){
     tinyfp shift = 7;
 
     if (x > 247)
-        return TFMAX;
+        return TF_INF;
     else if (x < -247)
-        return TFMIN;
+        return TF_NINF;
     else if (x == 0)
         return 0;
     // now always normalized value
@@ -93,12 +87,38 @@ tinyfp int2tinyfp(int x){
 
 }
 
+int pow2(int n) {
+    unsigned int res = 1;
+    if (n > 0)
+        return res << ((unsigned int) n);
+    else if (n == 0)
+        return 1;
+    return 0;
+}
+
 
 int tinyfp2int(tinyfp x){
+    tinyfp exponent;
+    tinyfp frac;
+    int res = 0;
+    int i;
+    int exponent_int = 0;
+    // check INF
+    if ((x & 0b01111000) == 0b01111000)
+        return INT_MIN;
+    exponent = (x & 0b01111000) >> 3;
+    frac = (x & 0b00000111) | 0b00001000;
+    if (exponent < 7)
+        return 0;
+    for (i = 0; i <= 3; ++i) {
+        if ((frac & (1 << i)) != 0){
+            res += pow2( ((int)exponent) - 10 + i);
+        }
+    }
+    if ((x >> 7) == 1)
+        res *= -1;
+    return res;
 
-
-
-	    return 2;
 }
 
 
