@@ -43,6 +43,7 @@ bmp_mosaic:
     # stack: [%rbx, width, height
     movq %rax, %rdi
     movq $0, %rdx
+    DEBUG:
     movq 8(%rsp), %rax #width to %rax
     divq %rcx
     pushq %rax
@@ -62,15 +63,14 @@ bmp_mosaic:
             leaq (%rcx, %rcx, 2), %rax
             addq %rax, %rdi
             incq %rbx
-            cmpq 24(%rsp), %rbx
+            cmpq 16(%rsp), %rbx
             jle LOOP_J
         # rax=?, %rbx=?, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
         # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
-        DEBUG:
-        movq 32(%rsp), %rax
+        movq 24(%rsp), %rax
         subq %rcx, %rax
         jl END
-        movq %rax, 32(%rsp)
+        movq %rax, 24(%rsp)
         popq %rdi
         subq 8(%rsp), %rdi
         jmp LOOP_I
@@ -84,4 +84,6 @@ ret
 # rax=?, %rbx=J counter, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
 # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
 blur_square:
+
+
 ret
