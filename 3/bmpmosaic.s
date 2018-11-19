@@ -74,7 +74,7 @@ bmp_mosaic:
         jl END
         movq %rax, 24(%rsp)
         popq %rdi
-        subq 8(%rsp), %rdi
+        subq (%rsp), %rdi
         jmp LOOP_I
     # rax=?, %rbx=?, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
@@ -146,9 +146,9 @@ BLUR_ONE_CHANNEL:
             cmpq 8(%rsp), %rcx
             jl LOOP_Y_SUM
         popq %rdi
-        subq 40(%rsp), %rdi # add bitWidth
+        subq 40(%rsp), %rdi # subtract bitWidth
         incq %rbx
-        cmpq 8(%rsp), %rbx
+        cmpq 16(%rsp), %rbx
         jl LOOP_X_SUM
     # rax=?, %rbx=x counter, %rcx=y counter, %rdx=?, %rsi=sum, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
@@ -156,6 +156,7 @@ BLUR_ONE_CHANNEL:
     movq %rbx, %rax
     mulq %rcx
     xchg %rax, %rsi
+    movq $0, %rdx
     divq %rsi
     # rax=mean, %rbx=x counter, %rcx=y counter, %rdx=?, %rsi=?, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
@@ -163,17 +164,17 @@ BLUR_ONE_CHANNEL:
     movq $0, %rbx
     LOOP_X_ASSIGN:
         movq $0, %rcx
-        addq 40(%rsp), %rdi # subtract bitWidth
+        addq 40(%rsp), %rdi # add bitWidth
         pushq %rdi
         LOOP_Y_ASSIGN:
-            movb %al, (%rdi)
+            movb $255, (%rdi)
             addq $3, %rdi
             incq %rcx
             cmpq 8(%rsp), %rcx
             jl LOOP_Y_ASSIGN
         popq %rdi
         incq %rbx
-        cmpq 8(%rsp), %rbx
+        cmpq 16(%rsp), %rbx
         jl LOOP_X_ASSIGN
     popq %rsi
     popq %rbx
