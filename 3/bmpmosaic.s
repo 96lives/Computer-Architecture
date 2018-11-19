@@ -62,21 +62,22 @@ bmp_mosaic:
             leaq (%rcx, %rcx, 2), %rax
             addq %rax, %rdi
             incq %rbx
-            cmpq 12(%rsp), %rbx
+            cmpq 24(%rsp), %rbx
             jle LOOP_J
         # rax=?, %rbx=?, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
         # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
-        movq 16(%rsp), %rax
+        DEBUG:
+        movq 32(%rsp), %rax
         subq %rcx, %rax
         jl END
-        movq %rax, 16(%rsp)
+        movq %rax, 32(%rsp)
         popq %rdi
-        subq 4(%rsp), %rdi
+        subq 8(%rsp), %rdi
         jmp LOOP_I
     # rax=?, %rbx=?, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
     END:
-    subq $20, %rsp
+    addq $40, %rsp
     popq %rbx
 ret
 
