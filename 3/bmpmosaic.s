@@ -42,11 +42,26 @@ bmp_mosaic:
     subq %rsi, %rax
     # rax=lastRow, %rbx=?, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
     # stack: [%rbx, width, height
+    
+    #movq $0, %rax
+    #movq $0, %rbx
+    #.GET_MAX_J:
+    #    incq %rax
+    #    addq %rcx, %rbx
+    #    cmpq 8(%rsp), %rbx
+    #    jl .GET_MAX_J
+    #pushq %rax
     movq %rax, %rdi
     movq $0, %rdx
     movq 8(%rsp), %rax #width to %rax
     divq %rcx
-    pushq %rax
+    movq %rax, %rbx
+    mulq %rcx
+    cmpq 8(%rsp), %rax
+    jne .NOT_DEC
+    dec %rbx
+    .NOT_DEC:
+    pushq %rbx
     movq %rsi, %rax
     mulq %rcx
     pushq %rax
