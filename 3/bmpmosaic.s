@@ -28,6 +28,8 @@ bmp_mosaic:
 	#	height is in %rdx
 	#	size   is in %rcx
 	#------------------------------------------------------------
+    cmpq $1, %rcx
+    je END1
     pushq %rbx
     pushq %rsi
     pushq %rdx
@@ -80,6 +82,7 @@ bmp_mosaic:
     END:
     addq $40, %rsp
     popq %rbx
+    END1:
 ret
 
 # rax=?, %rbx=J counter, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
