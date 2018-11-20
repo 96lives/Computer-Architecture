@@ -149,7 +149,7 @@ ret
             # rax=?, %rbx=x counter, %rcx=y counter, %rdx=?, %rsi=sum, %rdi=imgPtr
             # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
             # J Counter, bitWidth, size, imgPtr, k, new_width, new_height, imgPtr
-            cmpq 8(%rsp), %rcx
+            cmpq 16(%rsp), %rcx
             jl LOOP_Y_SUM
         popq %rdi
         subq 40(%rsp), %rdi # subtract bitWidth
@@ -173,10 +173,10 @@ ret
         addq 40(%rsp), %rdi # add bitWidth
         pushq %rdi
         LOOP_Y_ASSIGN:
-            movb $255, (%rdi)
+            movb %al, (%rdi)
             addq $3, %rdi
             incq %rcx
-            cmpq 8(%rsp), %rcx
+            cmpq 16(%rsp), %rcx
             jl LOOP_Y_ASSIGN
         popq %rdi
         incq %rbx
