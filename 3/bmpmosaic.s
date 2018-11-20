@@ -90,15 +90,17 @@ ret
     movq %rbx, %rax
     mulq %rcx
     movq 40(%rsp), %rbx
-    subq %rbx, %rax
+    subq %rax, %rbx
     cmpq %rbx, %rcx
     cmovl %rcx, %rbx # assign size to new_width
+    pushq %rsi # push %rsi
     # rax=?, %rbx=new_width, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer, J Counter, bitWidth
-    pushq %rsi # push %rsi
     movq 40(%rsp), %rsi
+    #addq (%rsp), %rsi
     cmpq %rsi, %rcx
     cmovl %rcx, %rsi # assign size to new_height
+    HEIGHT:
     pushq %rcx
     # rax=?, %rbx=new_width, %rcx=?, %rdx=?, %rsi=new_height, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
@@ -180,7 +182,7 @@ ret
             jl LOOP_Y_ASSIGN
         popq %rdi
         incq %rbx
-        cmpq 8(%rsp), %rbx
+        cmpq (%rsp), %rbx
         jl LOOP_X_ASSIGN
     popq %rsi
     popq %rbx
