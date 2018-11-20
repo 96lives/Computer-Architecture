@@ -28,8 +28,6 @@ bmp_mosaic:
 	#	height is in %rdx
 	#	size   is in %rcx
 	#------------------------------------------------------------
-    cmpq $1, %rcx
-    je END1
     pushq %rbx
     pushq %rsi
     pushq %rdx
@@ -55,7 +53,9 @@ bmp_mosaic:
     # rax=bitWidth*size, %rbx=?, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=lastRow
     # stack: [%rbx, width, height, MAX_J, bitWidth*size
     # TESTED
+    movq $0, %r9
     LOOP_I:
+        addq $1, %r9
         pushq %rdi #push first column of the row
         movq $0, %rbx
         # rax=?, %rbx=J counter, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
@@ -72,7 +72,7 @@ bmp_mosaic:
         # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
         movq 24(%rsp), %rax
         subq %rcx, %rax
-        jl END
+        jle END
         movq %rax, 24(%rsp)
         popq %rdi
         subq (%rsp), %rdi
@@ -103,6 +103,8 @@ ret
     #addq (%rsp), %rsi
     cmpq %rsi, %rcx
     cmovl %rcx, %rsi # assign size to new_height
+    cmpq $0, %rsi
+    je .BLUR_ONE_CHANNEL_END
     HEIGHT:
     pushq %rcx
     # rax=?, %rbx=new_width, %rcx=?, %rdx=?, %rsi=new_height, %rdi=imgPtr
