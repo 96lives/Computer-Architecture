@@ -83,19 +83,18 @@ bmp_mosaic:
 ret
 
 # rax=?, %rbx=J counter, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
-# stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer ,BLUE_SQUARE
+# stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer
 .BLUR_SQUARE:
     # calculate width
     pushq %rbx # push J Counter
     movq %rbx, %rax
     mulq %rcx
-    movq 48(%rsp), %rbx
+    movq 40(%rsp), %rbx
     subq %rbx, %rax
     cmpq %rbx, %rcx
     cmovl %rcx, %rbx # assign size to new_width
     # rax=?, %rbx=new_width, %rcx=size, %rdx=?, %rsi=bitWidth, %rdi=imgPtr
-    # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
-    # BLUE_SQUARE, J Counter
+    # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer, J Counter, bitWidth
     pushq %rsi # push %rsi
     movq 40(%rsp), %rsi
     cmpq %rsi, %rcx
@@ -103,14 +102,14 @@ ret
     pushq %rcx
     # rax=?, %rbx=new_width, %rcx=?, %rdx=?, %rsi=new_height, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
-    # BLUE_SQUARE, J Counter, bitWidth, size
+    # J Counter, bitWidth, size
     movq $0, %rax
     LOOP_k:
         pushq %rdi
         addq %rax, %rdi
         # rax=k, %rbx=new_width, %rcx=?, %rdx=?, %rsi=new_height, %rdi=imgPtr
         # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
-        # BLUE_SQUARE, J Counter, bitWidth, size, imgPtr
+        # J Counter, bitWidth, size, imgPtr
         jmp .BLUR_ONE_CHANNEL
         .BLUR_ONE_CHANNEL_END:
         incq %rax
@@ -119,7 +118,7 @@ ret
         jl LOOP_k
     # rax=k, %rbx=new_width, %rcx=?, %rdx=?, %rsi=new_height, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
-    # BLUE_SQUARE, J Counter, bitWidth, size
+    # J Counter, bitWidth, size
     popq %rcx
     popq %rsi
     popq %rbx
@@ -129,15 +128,14 @@ ret
 
 # rax=k, %rbx=new_width, %rcx=?, %rdx=?, %rsi=new_height, %rdi=imgPtr
 # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
-# BLUR_SQUARE, J Counter, bitWidth, size, imgPtr, BLUR_ONE_CHANNEL
+# J Counter, bitWidth, size, imgPtr
 .BLUR_ONE_CHANNEL:
     pushq %rax
     pushq %rbx
     pushq %rsi
     # rax=?, %rbx=x counter, %rcx=y counter, %rdx=?, %rsi=sum, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
-    # BLUR_SQUARE, J Counter, bitWidth, size, imgPtr,
-    # BLUR_ONE_CHANNEL, k, new_width, new_height
+    # J Counter, bitWidth, size, imgPtr, k, new_width, new_height
     movq $0, %rsi
     movq $0, %rbx
     LOOP_X_SUM:
@@ -148,12 +146,15 @@ ret
             addq %rax, %rsi
             addq $3, %rdi
             incq %rcx
+            # rax=?, %rbx=x counter, %rcx=y counter, %rdx=?, %rsi=sum, %rdi=imgPtr
+            # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
+            # J Counter, bitWidth, size, imgPtr, k, new_width, new_height, imgPtr
             cmpq 8(%rsp), %rcx
             jl LOOP_Y_SUM
         popq %rdi
-        subq 48(%rsp), %rdi # subtract bitWidth
+        subq 40(%rsp), %rdi # subtract bitWidth
         incq %rbx
-        cmpq 8(%rsp), %rbx
+        cmpq (%rsp), %rbx
         jl LOOP_X_SUM
     # rax=?, %rbx=x counter, %rcx=y counter, %rdx=?, %rsi=sum, %rdi=imgPtr
     # stack: [%rbx, width, (decreased)height, MAX_J, bitWidth*size, rowPointer,
@@ -169,7 +170,7 @@ ret
     movq $0, %rbx
     LOOP_X_ASSIGN:
         movq $0, %rcx
-        addq 48(%rsp), %rdi # add bitWidth
+        addq 40(%rsp), %rdi # add bitWidth
         pushq %rdi
         LOOP_Y_ASSIGN:
             movb $255, (%rdi)
