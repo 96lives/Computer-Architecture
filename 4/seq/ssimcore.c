@@ -118,6 +118,13 @@ word_t gen_mem_byte();
 word_t gen_Stat();
 word_t gen_new_pc();
 
+/*
+word_t gen_mem_byte() {
+    return ( ( (icode == I_MRMOVQ) || (icode == I_RMMOVQ) ) && (ifun == 1) );
+}
+*/
+
+
 /* Log file */
 FILE *dumpfile = NULL;
 
@@ -131,6 +138,8 @@ static char digits[16] =
 /********************
  * End Part 2 Globals
  ********************/
+
+
 
 static int initialized = 0;
 void sim_init()
@@ -225,8 +234,16 @@ static void update_state()
 
     if (mem_write) {
       /* Should have already tested this address */
-      set_word_val(mem, mem_addr, mem_data);
-	sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
+		
+	
+      if (mem_byte) {
+		  byte_t byte_data = mem_data & 0xFF;
+		  set_byte_val(mem, mem_addr, byte_data);
+	  }
+      else {
+        set_word_val(mem, mem_addr, mem_data);
+      }
+      sim_log("Wrote 0x%llx to address 0x%llx\n", mem_data, mem_addr);
 #ifdef HAS_GUI
 	    if (gui_mode) {
 		if (mem_addr % 8 != 0) {
@@ -274,6 +291,10 @@ static byte_t sim_step()
     icode = gen_icode();
     ifun  = gen_ifun();
     instr_valid = gen_instr_valid();
+
+    // DS
+    mem_byte = gen_mem_byte();
+    
     valp++;
     if (gen_need_regids()) {
 	byte_t regids;
@@ -342,9 +363,16 @@ static byte_t sim_step()
     mem_addr = gen_mem_addr();
     mem_data = gen_mem_data();
 
-
     if (gen_mem_read()) {
-      dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
+        if (mem_byte) {
+
+            dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
+			// do sign extension
+			valm = valm << 56;
+			valm = valm >> 56;
+		}
+        else
+            dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
       if (dmem_error) {
 	sim_log("Couldn't read at address 0x%llx\n", mem_addr);
       }
