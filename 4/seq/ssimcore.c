@@ -367,7 +367,7 @@ static byte_t sim_step()
 
             dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
 			// do sign extension
-            valm = valm & 0xff
+            valm = valm & 0xff;
 			//valm = valm << 56;
 			//valm = valm >> 56;
 		}

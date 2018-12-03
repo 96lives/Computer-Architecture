@@ -1,10 +1,10 @@
 /***********************************************************************
  *
  * ssim.c - Sequential Y86-64 simulator
- * 
+ *
  * Copyright (c) 2002, 2015. Bryant and D. O'Hallaron, All rights reserved.
  * May not be used, modified, or copied without permission.
- ***********************************************************************/ 
+ ***********************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,9 +35,9 @@ mem_t reg;               /* Register file */
 cc_t cc = DEFAULT_CC;    /* Condition code register */
 cc_t cc_in = DEFAULT_CC; /* Input to condition code register */
 
-/* 
+/*
  * SEQ+: Results computed by previous instruction.
- * Used to compute PC in current instruction 
+ * Used to compute PC in current instruction
  */
 byte_t prev_icode = I_NOP;
 byte_t prev_ifun = 0;
@@ -234,8 +234,7 @@ static void update_state()
 
     if (mem_write) {
       /* Should have already tested this address */
-		
-	
+
       if (mem_byte) {
 		  byte_t byte_data = mem_data & 0xFF;
 		  set_byte_val(mem, mem_addr, byte_data);
@@ -294,7 +293,7 @@ static byte_t sim_step()
 
     // DS
     mem_byte = gen_mem_byte();
-    
+
     valp++;
     if (gen_need_regids()) {
 	byte_t regids;
@@ -330,14 +329,14 @@ static byte_t sim_step()
     if (status == STAT_AOK && icode == I_HALT) {
 	status = STAT_HLT;
     }
-    
+
     srcA = gen_srcA();
     if (srcA != REG_NONE) {
 	vala = get_reg_val(reg, srcA);
     } else {
 	vala = 0;
     }
-    
+
     srcB = gen_srcB();
     if (srcB != REG_NONE) {
 	valb = get_reg_val(reg, srcB);
@@ -368,8 +367,9 @@ static byte_t sim_step()
 
             dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
 			// do sign extension
-			valm = valm << 56;
-			valm = valm >> 56;
+            valm = valm & 0xff;
+			//valm = valm << 56;
+			//valm = valm >> 56;
 		}
         else
             dmem_error = dmem_error || !get_word_val(mem, mem_addr, &valm);
@@ -398,7 +398,7 @@ static byte_t sim_step()
     } else {
 	/* Update PC */
 	pc_in = gen_new_pc();
-    } 
+    }
     sim_report();
     return status;
 }
