@@ -16,8 +16,8 @@
 
 CAT 	= /bin/cat
 
-YAS 	= 						# SET THIS VALUE (e.g., ../pa4-skeleton/sim/misc/yas)
-SSIM 	= 						# SET THIS VALUE (e.g., ../pa4-skeleton/sim/seq/ssim)
+YAS 	= ../4/misc/yas				# SET THIS VALUE (e.g., ../pa4-skeleton/sim/misc/yas)
+SSIM 	= ../4/seq/ssim						# SET THIS VALUE (e.g., ../pa4-skeleton/sim/seq/ssim)
 SSIMFLAGS = -s
 
 ifndef YAS
