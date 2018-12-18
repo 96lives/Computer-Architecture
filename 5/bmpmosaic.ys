@@ -1,0 +1,43 @@
+#----------------------------------------------------------------------
+# 
+#  4190.308 Computer Architecture (Fall 2018)
+#
+#  Project #5: Optimizing Performance on a Pipelined Y86-64 Processor
+#
+#  December 4, 2018
+#
+#  Jin-Soo Kim (jinsoo.kim@snu.ac.kr)
+#  Systems Software & Architecture Laboratory
+#  Dept. of Computer Science and Engineering
+#  Seoul National University
+#  http://csl.snu.ac.kr
+#
+#----------------------------------------------------------------------
+
+bmp_mosaic:
+	# imgptr is in %rdi
+	# width  is in %rsi
+	# height is in %rdx
+	# size 	 is in %rcx
+	#-----------------------------------------------------------------
+
+	# FILL HERE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	#-----------------------------------------------------------------
+
+	ret
