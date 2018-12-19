@@ -77,15 +77,19 @@ bmp_mosaic:
             # Calculate new_width, new_height
             pushq %rdx
 
+            pushq %rcx
             rrmovq %rcx, %r12
             rrmovq %r11, %r14
+            pushq %rsi
             subq %rcx, %r14
             jg DONT_CHANGE_NEW_WIDTH
                 rrmovq %r11, %r12
             DONT_CHANGE_NEW_WIDTH:
+            pushq %rbp
 
             rrmovq %rcx, %r13
             rrmovq %rdx, %r14
+            pushq %r10
             subq %rcx, %r14
             jg DONT_CHANGE_NEW_HEIGHT
                 rrmovq %rdx, %r13
@@ -99,15 +103,11 @@ bmp_mosaic:
             # stack: [rowPointer, (decreased)height
 
             # Prepare for loop
-            pushq %rcx
-            pushq %rsi
-            pushq %rbp
-            pushq %r10
             pushq %r11
-            pushq %r13
             irmovq $0 ,%rcx
             irmovq $0, %rsi
             irmovq $0, %rbp
+            pushq %r13
             # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=?
             # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
             # %r9=?, %r10=?, %r11=?, %r12=new_width,
