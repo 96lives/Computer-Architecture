@@ -4044,15 +4044,126 @@
                             |     # %r9=?, %r10=?, %r11=?, %r12=?
                             |     # %r13=?, %r14=?
                             |     
-                            |     # 2. calculate lastRox
+                            |     # 2. Calculate lastRow
 0x414: 2025                 |     rrmovq %rdx, %rbp
 0x416: 6435                 |     mulq %rbx, %rbp
 0x418: 6135                 |     subq %rbx, %rbp
-                            |     # %rax=?, %rbx=?, %rcx=size, %rdx=height
-                            |     # %rsi=width, %rdi=imgPtr, $rbp=lastRow,%r8=?,
+0x41a: 6057                 |     addq %rbp, %rdi
+                            |     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
+                            |     # %rsi=width, %rdi=lastRow, $rbp=?, %r8=?,
+                            |     # %r9=?, %r10=?, %r11=?, %r12=?
+                            |     # %r13=?, %r14=?
+                            |     
+                            |     # 3. Calculate bitWidth*size
+0x41c: 2015                 |     rrmovq %rcx, %rbp
+0x41e: 6435                 |     mulq %rbx, %rbp
+                            |     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
+                            |     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=?,
                             |     # %r9=?, %r10=?, %r11=?, %r12=?
                             |     # %r13=?, %r14=?
                             | 
+                            |     # 4. Calculate maxJ (width / size)
+0x420: 30f80100000000000000 |     irmovq $1, %r8
+0x42a: 2069                 |     rrmovq %rsi, %r9
+0x42c: 6189                 |     subq %r8, %r9
+0x42e: 6519                 |     divq %rcx, %r9
+0x430: 6089                 |     addq %r8, %r9
+                            |     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
+                            |     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=1
+                            |     # %r9=maxJ, %r10=?, %r11=?, %r12=?
+                            |     # %r13=?, %r14=?
+                            | 
+                            |     # 5. Preprocess for loop
+                            |     # 1) create 3 * size
+0x432: 201a                 |     rrmovq %rcx, %r10
+0x434: 640a                 |     mulq %rax, %r10
+                            | 
+0x436:                      |     LOOP_I:
+0x436: a07f                 |         pushq %rdi
+0x438: 209b                 |         rrmovq %r9, %r11
+0x43a:                      |         LOOP_J:
+                            |             # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
+                            |             # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+                            |             # %r9=maxJ, %r10=3*size, %r11=I_Counter(width-n*size), %r12=?
+                            |             # %r13=?, %r14=?
+                            |             # stack: [rowPointer,
+0x43a: 706904000000000000   |             jmp BLUR_SQUARE
+0x443:                      |             BLUR_SQUARE_END:
+0x443: 60a7                 |             addq %r10, %rdi
+0x445: 611b                 |             subq %rcx, %r11
+0x447: 763a04000000000000   |             jg LOOP_J
+0x450: 6112                 |         subq %rcx, %rdx
+0x452: 716804000000000000   |         jle END # TODO: Optimize to jump taken
+0x45b: b07f                 |         popq %rdi
+0x45d: 6157                 |         subq %rbp, %rdi
+0x45f: 703604000000000000   |         jmp LOOP_I
+0x468:                      |     END:
+0x468: 90                   | ret
+                            | 
+                            | # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
+                            | # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+                            | # %r9=maxJ, %r10=3*size, %r11=I_Counter(width-n*size), %r12=?
+                            | # %r13=?, %r14=?
+                            | # stack: [rowPointer,
+0x469:                      | BLUR_SQUARE:
+                            |     # Calculate new_width, new_height
+0x469: 20bc                 |     rrmovq %r11, %r12
+0x46b: 201e                 |     rrmovq %rcx, %r14
+0x46d: 61be                 |     subq %r11, %r14
+0x46f: 767804000000000000   |     jg CHANGE_NEW_WIDTH
+0x478:                      |     CHANGE_NEW_WIDTH:
+0x478: 201c                 |         rrmovq %rcx, %r12
+                            | 
+0x47a: 202d                 |     rrmovq %rdx, %r13
+0x47c: 201e                 |     rrmovq %rcx, %r14
+0x47e: 61de                 |     subq %r13, %r14
+0x480: 768904000000000000   |     jg CHANGE_NEW_HEIGHT
+0x489:                      |     CHANGE_NEW_HEIGHT:
+0x489: 201d                 |         rrmovq %rcx, %r13
+0x48b: a0df                 |     pushq %r13
+0x48d: a0cf                 |     pushq %r12
+                            | 
+                            |     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
+                            |     # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+                            |     # %r9=maxJ, %r10=3*size, %r11=I_Counter(width-n*size), %r12=new_width
+                            |     # %r13=new_height, %r14=?
+                            |     # stack: [rowPointer, new_height, new_width
+                            | 
+                            |     # Prepare for loop
+0x48f: a01f                 |     pushq %rcx
+0x491: a02f                 |     pushq %rdx
+0x493: a06f                 |     pushq %rsi
+0x495: a05f                 |     pushq %rbp
+0x497: a0af                 |     pushq %r10
+0x499: a0bf                 |     pushq %r11
+0x49b: a0cf                 |     pushq %r12
+0x49d: a0df                 |     pushq %r13
+0x49f: 30f10000000000000000 |     irmovq $0 ,%rcx
+0x4a9: 30f60000000000000000 |     irmovq $0, %rsi
+0x4b3: 30f50000000000000000 |     irmovq $0, %rbp
+                            |     # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
+                            |     # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
+                            |     # %r9=maxJ, %r10=?, %r11=?, %r12=new_width
+                            |     # %r13=new_height, %r14=?
+                            |     # stack: [rowPointer, new_height, new_width, size, (decreased)height,
+                            |     #         width, bitWidth*size, 3*size, I_Counter(width-n*size), new_width,
+                            |     #         new_hight
+                            | 
+                            |     # Calculate sum
+0x4bd:                      |     SUM_Y:
+0x4bd: 50d40000000000000000 |         mrmovq (%rsp), %r13
+0x4c7: a07f                 |         pushq %rdi
+0x4c9:                      |         SUM_X:
+                            |             # move
+                            |             # add
+0x4c9: 6187                 |             subq %r8, %rdi
+0x4cb: 76c904000000000000   |             jg SUM_X
+                            | 
+                            | 
+                            | 
+                            | 
+0x4d4: b07f                 |         popq %rdi
+0x4d6: 6137                 |         subq %rbx, %rdi
                             | 
                             | 
                             | 
@@ -4060,15 +4171,3 @@
                             | 
                             | 
                             | 
-                            | 
-                            | 
-                            | 
-                            | 
-                            | 
-                            | 
-                            | 
-                            | 
-                            | 
-                            | 	#-----------------------------------------------------------------
-                            | 
-0x41a: 90                   | 	ret

@@ -189,8 +189,6 @@ ret
         addq 40(%rsp), %rdi # add bitWidth
         pushq %rdi
         LOOP_Y_ASSIGN:
-            # TODO: ERASE
-            #movb $255, (%rdi)
             movb %al, (%rdi)
             addq $3, %rdi
             incq %rcx

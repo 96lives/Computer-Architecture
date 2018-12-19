@@ -40,31 +40,122 @@ bmp_mosaic:
     rrmovq %rdx, %rbp
     mulq %rbx, %rbp
     subq %rbx, %rbp
+    addq %rbp, %rdi
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
-    # %rsi=width, %rdi=imgPtr, $rbp=lastRow, %r8=?,
+    # %rsi=width, %rdi=lastRow, $rbp=?, %r8=?,
     # %r9=?, %r10=?, %r11=?, %r12=?
     # %r13=?, %r14=?
     
     # 3. Calculate bitWidth*size
-    rrmovq %rcx, %r8
-    mulq %rbx, %r8
+    rrmovq %rcx, %rbp
+    mulq %rbx, %rbp
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
-    # %rsi=width, %rdi=imgPtr, $rbp=lastRow, %r8=bitWidth*size,
+    # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=?,
     # %r9=?, %r10=?, %r11=?, %r12=?
     # %r13=?, %r14=?
 
-    # 4. Calculate maxJ
-    irmovq $1, %r10
-    rrmovq %rdx, %r9
-    subq %r10, %r9
+    # 4. Calculate maxJ (width / size)
+    irmovq $1, %r8
+    rrmovq %rsi, %r9
+    subq %r8, %r9
     divq %rcx, %r9
-    addq %r10, %r10
+    addq %r8, %r9
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
-    # %rsi=width, %rdi=imgPtr, $rbp=lastRow, %r8=bitWidth*size,
-    # %r9=maxJ, %r10=1, %r11=?, %r12=?
+    # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=1
+    # %r9=maxJ, %r10=?, %r11=?, %r12=?
     # %r13=?, %r14=?
-    
-    
+
+    # 5. Preprocess for loop
+    # 1) create 3 * size
+    rrmovq %rcx, %r10
+    mulq %rax, %r10
+
+    LOOP_I:
+        pushq %rdi
+        rrmovq %r9, %r11
+        LOOP_J:
+            # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
+            # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+            # %r9=maxJ, %r10=3*size, %r11=I_Counter(width-n*size), %r12=?
+            # %r13=?, %r14=?
+            # stack: [rowPointer,
+            jmp BLUR_SQUARE
+            BLUR_SQUARE_END:
+            addq %r10, %rdi
+            subq %rcx, %r11
+            jg LOOP_J
+        subq %rcx, %rdx
+        jle END # TODO: Optimize to jump taken
+        popq %rdi
+        subq %rbp, %rdi
+        jmp LOOP_I
+    END:
+ret
+
+# %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
+# %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+# %r9=maxJ, %r10=3*size, %r11=I_Counter(width-n*size), %r12=?
+# %r13=?, %r14=?
+# stack: [rowPointer,
+BLUR_SQUARE:
+    # Calculate new_width, new_height
+    rrmovq %r11, %r12
+    rrmovq %rcx, %r14
+    subq %r11, %r14
+    jg CHANGE_NEW_WIDTH
+    CHANGE_NEW_WIDTH:
+        rrmovq %rcx, %r12
+
+    rrmovq %rdx, %r13
+    rrmovq %rcx, %r14
+    subq %r13, %r14
+    jg CHANGE_NEW_HEIGHT
+    CHANGE_NEW_HEIGHT:
+        rrmovq %rcx, %r13
+    pushq %r13
+    pushq %r12
+
+    # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
+    # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+    # %r9=maxJ, %r10=3*size, %r11=I_Counter(width-n*size), %r12=new_width
+    # %r13=new_height, %r14=?
+    # stack: [rowPointer, new_height, new_width
+
+    # Prepare for loop
+    pushq %rcx
+    pushq %rdx
+    pushq %rsi
+    pushq %rbp
+    pushq %r10
+    pushq %r11
+    pushq %r12
+    pushq %r13
+    irmovq $0 ,%rcx
+    irmovq $0, %rsi
+    irmovq $0, %rbp
+    # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
+    # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
+    # %r9=maxJ, %r10=?, %r11=?, %r12=new_width
+    # %r13=new_height, %r14=?
+    # stack: [rowPointer, new_height, new_width, size, (decreased)height,
+    #         width, bitWidth*size, 3*size, I_Counter(width-n*size), new_width,
+    #         new_hight
+
+    # Calculate sum
+    SUM_Y:
+        mrmovq (%rsp), %r13
+        pushq %rdi
+        SUM_X:
+            # move
+            # add
+            subq %r8, %rdi
+            jg SUM_X
+
+
+
+
+        popq %rdi
+        subq %rbx, %rdi
 
 
 
@@ -72,17 +163,3 @@ bmp_mosaic:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-	#-----------------------------------------------------------------
-
-	ret
