@@ -63,34 +63,26 @@ bmp_mosaic:
     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=1,
     # %r9=?, %r10=3*size, %r11=?, %r12=?
     # %r13=?, %r14=?
-    rrmovq %rsi, %r11
-    LOOP_W:
-        jmp BLUR_SQUARE
-        BLUR_SQUARE_END:
-        addq %r10, %rdi
-        subq %rcx, %r11
-        jg LOOP_W
-
 
     # CHECKED!
-#    LOOP_H:
-#        pushq %rdi
-#        rrmovq %rsi, %r11
-#        LOOP_W:
+    LOOP_H:
+        pushq %rdi
+        rrmovq %rsi, %r11
+        LOOP_W:
             # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
             # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
             # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
             # %r13=?, %r14=?
             # stack: [rowPointer,
-#            jmp BLUR_SQUARE
-#            BLUR_SQUARE_END:
-#            addq %r10, %rdi
-#            subq %rcx, %r11
-#            jg LOOP_W
-#        popq %rdi
-#        subq %rbp, %rdi
-#        subq %rcx, %rdx
-#        jg LOOP_H
+            jmp BLUR_SQUARE
+            BLUR_SQUARE_END:
+            addq %r10, %rdi
+            subq %rcx, %r11
+            jg LOOP_W
+        popq %rdi
+        subq %rbp, %rdi
+        subq %rcx, %rdx
+        jg LOOP_H
 ret
 
 
