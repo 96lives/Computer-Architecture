@@ -98,6 +98,7 @@ ret
 # stack: [rowPointer,
 BLUR_SQUARE:
     # Calculate new_width, new_height
+    pushq %rdx
 
     rrmovq %r11, %r12
     rrmovq %rcx, %r14
@@ -111,11 +112,11 @@ BLUR_SQUARE:
     CHANGE_NEW_HEIGHT_END:
     # CHECKED!
 
-    # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
+    # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=?
     # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
     # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=new_width
     # %r13=new_height, %r14=?
-    # stack: [rowPointer,
+    # stack: [rowPointer, (decreased)height
 
     # Prepare for loop
     pushq %rcx
@@ -127,30 +128,29 @@ BLUR_SQUARE:
     irmovq $0 ,%rcx
     irmovq $0, %rsi
     irmovq $0, %rbp
-    # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
+    # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=?
     # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
     # %r9=?, %r10=?, %r11=?, %r12=new_width,
     # %r13=(decreasing)h_counter, %r14=(decreasing)w_counter
-    # stack: [rowPointer, size, width, bitWidth*size, 3*size,
+    # stack: [rowPointer, decreased(height), size, width, bitWidth*size, 3*size,
     #         (decreased)width, new_height
 
     # Calculate sum
     SUM_H:
         rrmovq %r12, %r14
-        pushq %rdi
+        rrmovq %rdi, %rdx
         SUM_W:
             # move
-            mrmovb (%rdi), %r9
-            mrmovb 1(%rdi), %r10
-            mrmovb 2(%rdi), %r11
+            mrmovb (%rdx), %r9
+            mrmovb 1(%rdx), %r10
+            mrmovb 2(%rdx), %r11
             # add
+            addq %rax, %rdx # add 3
             addq %r9, %rcx
             addq %r10, %rsi
             addq %r11, %rbp
-            addq %rax, %rdi # add 3
             subq %r8, %r14
             jg SUM_W
-        popq %rdi
         subq %rbx, %rdi
         subq %r8, %r13
         jg SUM_H
@@ -176,17 +176,14 @@ BLUR_SQUARE:
     #         3*size, (decreased)width
     ASSIGN_H:
         rrmovq %r12, %r14
-        pushq %rdi
+        rrmovq %rdi, %rdx
         ASSIGN_W:
-            # move
-            rmmovb %rcx, (%rdi)
-            rmmovb %rsi, 1(%rdi)
-            rmmovb %rbp, 2(%rdi)
-            # add
-            addq %rax, %rdi
+            rmmovb %rcx, (%rdx)
+            rmmovb %rsi, 1(%rdx)
+            rmmovb %rbp, 2(%rdx)
+            addq %rax, %rdx
             subq %r8, %r14
             jg ASSIGN_W
-        popq %rdi
         addq %rbx, %rdi
         subq %r8, %r13
         jg ASSIGN_H
@@ -207,6 +204,7 @@ BLUR_SQUARE:
     # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
     # %r13=?, %r14=?
     # stack: [rowPointer,
+    popq %rdx
 jmp BLUR_SQUARE_END
 
 
