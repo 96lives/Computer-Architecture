@@ -4053,6 +4053,7 @@
 0x426: 613b                 |     subq %rbx, %r11
 0x428: 60b7                 |     addq %r11, %rdi
 0x42a: 6435                 |     mulq %rbx, %rbp
+0x42c: 640a                 |     mulq %rax, %r10
                             |     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
                             |     # %rsi=width, %rdi=lastRow, $rbp=?, %r8=?,
                             |     # %r9=?, %r10=?, %r11=?, %r12=?
@@ -4066,7 +4067,6 @@
                             | 
                             |     # 4. Preprocess for loop
                             |     # 1) create 3 * size
-0x42c: 640a                 |     mulq %rax, %r10
                             |     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
                             |     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=1,
                             |     # %r9=?, %r10=3*size, %r11=?, %r12=?
@@ -4133,30 +4133,30 @@
 0x48e: 51a20100000000000000 |                     mrmovb 1(%rdx), %r10
 0x498: 51b20200000000000000 |                     mrmovb 2(%rdx), %r11
                             |                     # add
-0x4a2: 6002                 |                     addq %rax, %rdx # add 3
-0x4a4: 6091                 |                     addq %r9, %rcx
-0x4a6: 60a6                 |                     addq %r10, %rsi
-0x4a8: 60b5                 |                     addq %r11, %rbp
-0x4aa: 618e                 |                     subq %r8, %r14
-0x4ac: 768404000000000000   |                     jg SUM_W
-0x4b5: 6137                 |                 subq %rbx, %rdi
-0x4b7: 618d                 |                 subq %r8, %r13
-0x4b9: 768004000000000000   |                 jg SUM_H
+0x4a2: c0f20300000000000000 |                     iaddq $3, %rdx # add 3
+0x4ac: 6091                 |                     addq %r9, %rcx
+0x4ae: 60a6                 |                     addq %r10, %rsi
+0x4b0: 60b5                 |                     addq %r11, %rbp
+0x4b2: 618e                 |                     subq %r8, %r14
+0x4b4: 768404000000000000   |                     jg SUM_W
+0x4bd: 6137                 |                 subq %rbx, %rdi
+0x4bf: 618d                 |                 subq %r8, %r13
+0x4c1: 768004000000000000   |                 jg SUM_H
                             |             # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
                             |             # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
                             |             # %r9=?, %r10=?, %r11=?, %r12=new_width,
                             |             # %r13=?, %r14=0
                             |             # stack: [rowPointer, size, width, bitWidth*size,
                             |             #         3*size, (decreased)width, new_height
-0x4c2: b0df                 |             popq %r13
-0x4c4: 6037                 |             addq %rbx, %rdi
-0x4c6: 20d9                 |             rrmovq %r13, %r9
-0x4c8: 64c9                 |             mulq %r12, %r9
-0x4ca: b0bf                 |             popq %r11
-0x4cc: 6591                 |             divq %r9, %rcx
-0x4ce: 6596                 |             divq %r9, %rsi
-0x4d0: b0af                 |             popq %r10
-0x4d2: 6595                 |             divq %r9, %rbp
+0x4ca: b0df                 |             popq %r13
+0x4cc: 6037                 |             addq %rbx, %rdi
+0x4ce: 20d9                 |             rrmovq %r13, %r9
+0x4d0: 64c9                 |             mulq %r12, %r9
+0x4d2: b0bf                 |             popq %r11
+0x4d4: 6591                 |             divq %r9, %rcx
+0x4d6: 6596                 |             divq %r9, %rsi
+0x4d8: b0af                 |             popq %r10
+0x4da: 6595                 |             divq %r9, %rbp
                             | 
                             |             # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
                             |             # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
@@ -4164,40 +4164,40 @@
                             |             # %r13=new_height, %r14=w_counter
                             |             # stack: [rowPointer, size, width, bitWidth*size,
                             |             #         3*size, (decreased)width
-0x4d4:                      |             ASSIGN_H:
-0x4d4: 2072                 |                 rrmovq %rdi, %rdx
-0x4d6: 20ce                 |                 rrmovq %r12, %r14
-0x4d8:                      |                 ASSIGN_W:
-0x4d8: 41120000000000000000 |                     rmmovb %rcx, (%rdx)
-0x4e2: 41620100000000000000 |                     rmmovb %rsi, 1(%rdx)
-0x4ec: 41520200000000000000 |                     rmmovb %rbp, 2(%rdx)
-0x4f6: 6002                 |                     addq %rax, %rdx
-0x4f8: 618e                 |                     subq %r8, %r14
-0x4fa: 76d804000000000000   |                     jg ASSIGN_W
-0x503: 6037                 |                 addq %rbx, %rdi
-0x505: 618d                 |                 subq %r8, %r13
-0x507: 76d404000000000000   |                 jg ASSIGN_H
+0x4dc:                      |             ASSIGN_H:
+0x4dc: 2072                 |                 rrmovq %rdi, %rdx
+0x4de: 20ce                 |                 rrmovq %r12, %r14
+0x4e0:                      |                 ASSIGN_W:
+0x4e0: 41120000000000000000 |                     rmmovb %rcx, (%rdx)
+0x4ea: 41620100000000000000 |                     rmmovb %rsi, 1(%rdx)
+0x4f4: 41520200000000000000 |                     rmmovb %rbp, 2(%rdx)
+0x4fe: c0f20300000000000000 |                     iaddq $3, %rdx
+0x508: 618e                 |                     subq %r8, %r14
+0x50a: 76e004000000000000   |                     jg ASSIGN_W
+0x513: 6037                 |                 addq %rbx, %rdi
+0x515: 618d                 |                 subq %r8, %r13
+0x517: 76dc04000000000000   |                 jg ASSIGN_H
                             |             # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
                             |             # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
                             |             # %r9=?, %r10=?, %r11=?, %r12=new_width,
                             |             # %r13=new_height, %r14=w_counter
                             |             # stack: [rowPointer, size, width, bitWidth*size,
                             |             #         3*size, (decreased)width
-0x510: b05f                 |             popq %rbp
-0x512: 6137                 |             subq %rbx, %rdi
-0x514: b06f                 |             popq %rsi
-0x516: b01f                 |             popq %rcx
-0x518: 60a7                 |             addq %r10, %rdi
+0x520: b05f                 |             popq %rbp
+0x522: 6137                 |             subq %rbx, %rdi
+0x524: b06f                 |             popq %rsi
+0x526: b01f                 |             popq %rcx
+0x528: 60a7                 |             addq %r10, %rdi
                             |             # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
                             |             # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
                             |             # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
                             |             # %r13=?, %r14=?
                             |             # stack: [rowPointer,
-0x51a: b02f                 |             popq %rdx
-0x51c: 611b                 |             subq %rcx, %r11
-0x51e: 763204000000000000   |             jg LOOP_W
-0x527: b07f                 |         popq %rdi
-0x529: 6157                 |         subq %rbp, %rdi
-0x52b: 6112                 |         subq %rcx, %rdx
-0x52d: 762e04000000000000   |         jg LOOP_H
-0x536: 90                   | ret
+0x52a: b02f                 |             popq %rdx
+0x52c: 611b                 |             subq %rcx, %r11
+0x52e: 763204000000000000   |             jg LOOP_W
+0x537: b07f                 |         popq %rdi
+0x539: 6157                 |         subq %rbp, %rdi
+0x53b: 6112                 |         subq %rcx, %rdx
+0x53d: 762e04000000000000   |         jg LOOP_H
+0x546: 90                   | ret

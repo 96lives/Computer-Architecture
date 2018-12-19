@@ -4053,6 +4053,7 @@ bmp_mosaic:
     subq %rbx, %r11
     addq %r11, %rdi
     mulq %rbx, %rbp
+    mulq %rax, %r10
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
     # %rsi=width, %rdi=lastRow, $rbp=?, %r8=?,
     # %r9=?, %r10=?, %r11=?, %r12=?
@@ -4066,7 +4067,6 @@ bmp_mosaic:
 
     # 4. Preprocess for loop
     # 1) create 3 * size
-    mulq %rax, %r10
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=1,
     # %r9=?, %r10=3*size, %r11=?, %r12=?
@@ -4133,7 +4133,7 @@ bmp_mosaic:
                     mrmovb 1(%rdx), %r10
                     mrmovb 2(%rdx), %r11
                     # add
-                    addq %rax, %rdx # add 3
+                    iaddq $3, %rdx # add 3
                     addq %r9, %rcx
                     addq %r10, %rsi
                     addq %r11, %rbp
@@ -4171,7 +4171,7 @@ bmp_mosaic:
                     rmmovb %rcx, (%rdx)
                     rmmovb %rsi, 1(%rdx)
                     rmmovb %rbp, 2(%rdx)
-                    addq %rax, %rdx
+                    iaddq $3, %rdx
                     subq %r8, %r14
                     jg ASSIGN_W
                 addq %rbx, %rdi
