@@ -150,7 +150,7 @@ BLUR_SQUARE:
             addq %r9, %rcx
             addq %r10, %rsi
             addq %r11, %rbp
-            addq %rax, %rdi
+            addq %rax, %rdi # add 3
             subq %r8, %r14
             jg SUM_W
         popq %rdi
@@ -176,7 +176,6 @@ BLUR_SQUARE:
     # %r13=new_height, %r14=w_counter
     # stack: [rowPointer, new_height, new_width, size, (decreased)height,
     #         width, bitWidth*size, 3*size, (decreased)width
-
     ASSIGN_H:
         rrmovq %r12, %r14
         pushq %rdi
@@ -186,12 +185,14 @@ BLUR_SQUARE:
             rmmovb %rsi, 1(%rdi)
             rmmovb %rbp, 2(%rdi)
             # add
+            addq %rax, %rdi
             subq %r8, %r14
             jg ASSIGN_W
         popq %rdi
         addq %rbx, %rdi
         subq %r8, %r13
         jg ASSIGN_H
+    subq %rbx, %rdi
     # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
     # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
     # %r9=?, %r10=?, %r11=?, %r12=new_width,
