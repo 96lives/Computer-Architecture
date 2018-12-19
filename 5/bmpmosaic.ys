@@ -28,6 +28,7 @@ bmp_mosaic:
     irmovq $3, %rax
     rrmovq %rsi, %rbx
     rrmovq %rsi, %rbp
+    rrmovq %rdx, %r11
     andq %rax, %rbx
     mulq %rax, %rbp
     addq %rbp, %rbx
@@ -37,18 +38,20 @@ bmp_mosaic:
     # %r13=?, %r14=?
 
     # 2. Calculate lastRow
-    rrmovq %rdx, %rbp
+    mulq %rbx, %r11
+    rrmovq %rcx, %rbp
+    rrmovq %rcx, %r10
+    irmovq $1, %r8
+    subq %rbx, %r11
+    addq %r11, %rdi
     mulq %rbx, %rbp
-    subq %rbx, %rbp
-    addq %rbp, %rdi
+    mulq %rax, %r10
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
     # %rsi=width, %rdi=lastRow, $rbp=?, %r8=?,
     # %r9=?, %r10=?, %r11=?, %r12=?
     # %r13=?, %r14=?
 
     # 3. Calculate bitWidth*size
-    rrmovq %rcx, %rbp
-    mulq %rbx, %rbp
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=?,
     # %r9=?, %r10=?, %r11=?, %r12=?
@@ -56,9 +59,6 @@ bmp_mosaic:
 
     # 4. Preprocess for loop
     # 1) create 3 * size
-    rrmovq %rcx, %r10
-    mulq %rax, %r10
-    irmovq $1, %r8
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=1,
     # %r9=?, %r10=3*size, %r11=?, %r12=?
@@ -186,7 +186,6 @@ bmp_mosaic:
             # %r13=?, %r14=?
             # stack: [rowPointer,
             popq %rdx
-
             subq %rcx, %r11
             jg LOOP_W
         popq %rdi
