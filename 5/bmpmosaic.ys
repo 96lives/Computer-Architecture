@@ -157,6 +157,7 @@ BLUR_SQUARE:
         subq %rbx, %rdi
         subq %r8, %r13
         jg SUM_H
+    addq %rbx, %rdi
     # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
     # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
     # %r9=?, %r10=?, %r11=?, %r12=new_width,
