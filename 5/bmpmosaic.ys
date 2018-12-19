@@ -100,16 +100,19 @@ BLUR_SQUARE:
     # Calculate new_width, new_height
     pushq %rdx
 
-    rrmovq %r11, %r12
-    rrmovq %rcx, %r14
-    subq %r11, %r14
-    jl CHANGE_NEW_WIDTH
-    CHANGE_NEW_WIDTH_END:
-    rrmovq %rdx, %r13
-    rrmovq %rcx, %r14
-    subq %r13, %r14
-    jl CHANGE_NEW_HEIGHT
-    CHANGE_NEW_HEIGHT_END:
+    rrmovq %rcx, %r12
+    rrmovq %r11, %r14
+    subq %rcx, %r14
+    jg DONT_CHANGE_NEW_WIDTH
+        rrmovq %r11, %r12
+    DONT_CHANGE_NEW_WIDTH:
+
+    rrmovq %rcx, %r13
+    rrmovq %rdx, %r14
+    subq %rcx, %r14
+    jg DONT_CHANGE_NEW_HEIGHT
+        rrmovq %rdx, %r13
+    DONT_CHANGE_NEW_HEIGHT:
     # CHECKED!
 
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=?
@@ -208,11 +211,4 @@ BLUR_SQUARE:
 jmp BLUR_SQUARE_END
 
 
-CHANGE_NEW_WIDTH:
-rrmovq %rcx, %r12
-jmp CHANGE_NEW_WIDTH_END
 
-
-CHANGE_NEW_HEIGHT:
-rrmovq %rcx, %r13
-jmp CHANGE_NEW_HEIGHT_END
