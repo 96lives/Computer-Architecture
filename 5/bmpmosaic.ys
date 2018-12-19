@@ -63,6 +63,8 @@ bmp_mosaic:
     # %r9=?, %r10=3*size, %r11=?, %r12=?
     # %r13=?, %r14=?
 
+    # CHECKED!
+
     LOOP_H:
         pushq %rdi
         rrmovq %rsi, %r11
@@ -81,7 +83,6 @@ bmp_mosaic:
         subq %rbp, %rdi
         subq %rcx, %rdx
         jg LOOP_H
-popq %r14
 ret
 
 # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
@@ -105,6 +106,8 @@ BLUR_SQUARE:
     CHANGE_NEW_HEIGHT:
         rrmovq %rcx, %r13
 
+    # CHECKED!
+
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
     # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
     # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=new_width
@@ -113,7 +116,6 @@ BLUR_SQUARE:
 
     # Prepare for loop
     pushq %rcx
-    pushq %rdx
     pushq %rsi
     pushq %rbp
     pushq %r10
@@ -149,14 +151,12 @@ BLUR_SQUARE:
         subq %rbx, %rdi
         subq %r8, %r13
         jg SUM_H
-    
     # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
     # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
     # %r9=?, %r10=?, %r11=?, %r12=new_width,
     # %r13=?, %r14=0
     # stack: [rowPointer, new_height, new_width, size, (decreased)height,
     #         width, bitWidth*size, 3*size, (decreased)width, new_height
-    
     popq %r13
     rrmovq %r13, %r9
     mulq %r12, %r9
