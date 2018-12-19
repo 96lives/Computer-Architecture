@@ -58,6 +58,7 @@ bmp_mosaic:
     # 1) create 3 * size
     rrmovq %rcx, %r10
     mulq %rax, %r10
+    irmovq $1, %r8
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
     # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=?,
     # %r9=?, %r10=3*size, %r11=?, %r12=?
@@ -92,6 +93,7 @@ ret
 # stack: [rowPointer,
 BLUR_SQUARE:
     # Calculate new_width, new_height
+
     rrmovq %r11, %r12
     rrmovq %rcx, %r14
     subq %r11, %r14
@@ -170,6 +172,7 @@ BLUR_SQUARE:
     # %r13=new_height, %r14=w_counter
     # stack: [rowPointer, new_height, new_width, size, (decreased)height,
     #         width, bitWidth*size, 3*size, (decreased)width
+
     ASSIGN_H:
         rrmovq %r12, %r14
         pushq %rdi
@@ -196,13 +199,9 @@ BLUR_SQUARE:
     popq %rbp
     popq %rsi
     popq %rcx
-
     # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
     # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
     # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
     # %r13=?, %r14=?
     # stack: [rowPointer,
 jmp BLUR_SQUARE_END
-
-
-
