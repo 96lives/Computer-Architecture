@@ -41,7 +41,6 @@ bmp_mosaic:
     mulq %rbx, %r11
     rrmovq %rcx, %rbp
     rrmovq %rcx, %r10
-    irmovq $1, %r8
     subq %rbx, %r11
     addq %r11, %rdi
     mulq %rbx, %rbp
@@ -127,10 +126,10 @@ bmp_mosaic:
                     addq %r9, %rcx
                     addq %r10, %rsi
                     addq %r11, %rbp
-                    subq %r8, %r14
+                    iaddq $-1, %r14
                     jg SUM_W
                 subq %rbx, %rdi
-                subq %r8, %r13
+                iaddq $-1, %r13
                 jg SUM_H
             # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
             # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
@@ -162,10 +161,10 @@ bmp_mosaic:
                     rmmovb %rsi, 1(%rax)
                     rmmovb %rbp, 2(%rax)
                     iaddq $3, %rax
-                    subq %r8, %r14
+                    iaddq $-1, %r14
                     jg ASSIGN_W
                 addq %rbx, %rdi
-                subq %r8, %r13
+                iaddq $-1, %r13
                 jg ASSIGN_H
             # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
             # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
