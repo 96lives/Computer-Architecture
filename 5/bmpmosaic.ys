@@ -74,8 +74,118 @@ bmp_mosaic:
             # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
             # %r13=?, %r14=?
             # stack: [rowPointer,
-            jmp BLUR_SQUARE
-            BLUR_SQUARE_END:
+            # Calculate new_width, new_height
+            pushq %rdx
+
+            rrmovq %rcx, %r12
+            rrmovq %r11, %r14
+            subq %rcx, %r14
+            jg DONT_CHANGE_NEW_WIDTH
+                rrmovq %r11, %r12
+            DONT_CHANGE_NEW_WIDTH:
+
+            rrmovq %rcx, %r13
+            rrmovq %rdx, %r14
+            subq %rcx, %r14
+            jg DONT_CHANGE_NEW_HEIGHT
+                rrmovq %rdx, %r13
+            DONT_CHANGE_NEW_HEIGHT:
+            # CHECKED!
+
+            # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=?
+            # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+            # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=new_width
+            # %r13=new_height, %r14=?
+            # stack: [rowPointer, (decreased)height
+
+            # Prepare for loop
+            pushq %rcx
+            pushq %rsi
+            pushq %rbp
+            pushq %r10
+            pushq %r11
+            pushq %r13
+            irmovq $0 ,%rcx
+            irmovq $0, %rsi
+            irmovq $0, %rbp
+            # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=?
+            # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
+            # %r9=?, %r10=?, %r11=?, %r12=new_width,
+            # %r13=(decreasing)h_counter, %r14=(decreasing)w_counter
+            # stack: [rowPointer, decreased(height), size, width, bitWidth*size, 3*size,
+            #         (decreased)width, new_height
+
+            # Calculate sum
+            SUM_H:
+                rrmovq %r12, %r14
+                rrmovq %rdi, %rdx
+                SUM_W:
+                    # move
+                    mrmovb (%rdx), %r9
+                    mrmovb 1(%rdx), %r10
+                    mrmovb 2(%rdx), %r11
+                    # add
+                    addq %rax, %rdx # add 3
+                    addq %r9, %rcx
+                    addq %r10, %rsi
+                    addq %r11, %rbp
+                    subq %r8, %r14
+                    jg SUM_W
+                subq %rbx, %rdi
+                subq %r8, %r13
+                jg SUM_H
+            addq %rbx, %rdi
+            # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
+            # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
+            # %r9=?, %r10=?, %r11=?, %r12=new_width,
+            # %r13=?, %r14=0
+            # stack: [rowPointer, size, width, bitWidth*size,
+            #         3*size, (decreased)width, new_height
+            popq %r13
+            rrmovq %r13, %r9
+            mulq %r12, %r9
+            divq %r9, %rcx
+            divq %r9, %rsi
+            divq %r9, %rbp
+
+            # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
+            # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
+            # %r9=?, %r10=?, %r11=?, %r12=new_width,
+            # %r13=new_height, %r14=w_counter
+            # stack: [rowPointer, size, width, bitWidth*size,
+            #         3*size, (decreased)width
+            ASSIGN_H:
+                rrmovq %r12, %r14
+                rrmovq %rdi, %rdx
+                ASSIGN_W:
+                    rmmovb %rcx, (%rdx)
+                    rmmovb %rsi, 1(%rdx)
+                    rmmovb %rbp, 2(%rdx)
+                    addq %rax, %rdx
+                    subq %r8, %r14
+                    jg ASSIGN_W
+                addq %rbx, %rdi
+                subq %r8, %r13
+                jg ASSIGN_H
+            subq %rbx, %rdi
+            # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
+            # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
+            # %r9=?, %r10=?, %r11=?, %r12=new_width,
+            # %r13=new_height, %r14=w_counter
+            # stack: [rowPointer, size, width, bitWidth*size,
+            #         3*size, (decreased)width
+            popq %r11
+            popq %r10
+            popq %rbp
+            popq %rsi
+            popq %rcx
+            # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
+            # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
+            # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
+            # %r13=?, %r14=?
+            # stack: [rowPointer,
+            popq %rdx
+
             addq %r10, %rdi
             subq %rcx, %r11
             jg LOOP_W
@@ -84,131 +194,3 @@ bmp_mosaic:
         subq %rcx, %rdx
         jg LOOP_H
 ret
-
-
-    # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=height
-    # %rsi=width, %rdi=lastRow, $rbp=bitWidth*size, %r8=?,
-    # %r9=?, %r10=3*size, %r11=?, %r12=?
-    # %r13=?, %r14=?
-
-# %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
-# %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
-# %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
-# %r13=?, %r14=?
-# stack: [rowPointer,
-BLUR_SQUARE:
-    # Calculate new_width, new_height
-    pushq %rdx
-
-    rrmovq %rcx, %r12
-    rrmovq %r11, %r14
-    subq %rcx, %r14
-    jg DONT_CHANGE_NEW_WIDTH
-        rrmovq %r11, %r12
-    DONT_CHANGE_NEW_WIDTH:
-
-    rrmovq %rcx, %r13
-    rrmovq %rdx, %r14
-    subq %rcx, %r14
-    jg DONT_CHANGE_NEW_HEIGHT
-        rrmovq %rdx, %r13
-    DONT_CHANGE_NEW_HEIGHT:
-    # CHECKED!
-
-    # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=?
-    # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
-    # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=new_width
-    # %r13=new_height, %r14=?
-    # stack: [rowPointer, (decreased)height
-
-    # Prepare for loop
-    pushq %rcx
-    pushq %rsi
-    pushq %rbp
-    pushq %r10
-    pushq %r11
-    pushq %r13
-    irmovq $0 ,%rcx
-    irmovq $0, %rsi
-    irmovq $0, %rbp
-    # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=?
-    # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
-    # %r9=?, %r10=?, %r11=?, %r12=new_width,
-    # %r13=(decreasing)h_counter, %r14=(decreasing)w_counter
-    # stack: [rowPointer, decreased(height), size, width, bitWidth*size, 3*size,
-    #         (decreased)width, new_height
-
-    # Calculate sum
-    SUM_H:
-        rrmovq %r12, %r14
-        rrmovq %rdi, %rdx
-        SUM_W:
-            # move
-            mrmovb (%rdx), %r9
-            mrmovb 1(%rdx), %r10
-            mrmovb 2(%rdx), %r11
-            # add
-            addq %rax, %rdx # add 3
-            addq %r9, %rcx
-            addq %r10, %rsi
-            addq %r11, %rbp
-            subq %r8, %r14
-            jg SUM_W
-        subq %rbx, %rdi
-        subq %r8, %r13
-        jg SUM_H
-    addq %rbx, %rdi
-    # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
-    # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
-    # %r9=?, %r10=?, %r11=?, %r12=new_width,
-    # %r13=?, %r14=0
-    # stack: [rowPointer, size, width, bitWidth*size,
-    #         3*size, (decreased)width, new_height
-    popq %r13
-    rrmovq %r13, %r9
-    mulq %r12, %r9
-    divq %r9, %rcx
-    divq %r9, %rsi
-    divq %r9, %rbp
-
-    # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
-    # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
-    # %r9=?, %r10=?, %r11=?, %r12=new_width,
-    # %r13=new_height, %r14=w_counter
-    # stack: [rowPointer, size, width, bitWidth*size,
-    #         3*size, (decreased)width
-    ASSIGN_H:
-        rrmovq %r12, %r14
-        rrmovq %rdi, %rdx
-        ASSIGN_W:
-            rmmovb %rcx, (%rdx)
-            rmmovb %rsi, 1(%rdx)
-            rmmovb %rbp, 2(%rdx)
-            addq %rax, %rdx
-            subq %r8, %r14
-            jg ASSIGN_W
-        addq %rbx, %rdi
-        subq %r8, %r13
-        jg ASSIGN_H
-    subq %rbx, %rdi
-    # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
-    # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
-    # %r9=?, %r10=?, %r11=?, %r12=new_width,
-    # %r13=new_height, %r14=w_counter
-    # stack: [rowPointer, size, width, bitWidth*size,
-    #         3*size, (decreased)width
-    popq %r11
-    popq %r10
-    popq %rbp
-    popq %rsi
-    popq %rcx
-    # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
-    # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
-    # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
-    # %r13=?, %r14=?
-    # stack: [rowPointer,
-    popq %rdx
-jmp BLUR_SQUARE_END
-
-
-
