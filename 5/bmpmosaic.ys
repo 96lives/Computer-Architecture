@@ -117,8 +117,8 @@ bmp_mosaic:
 
             # Calculate sum
             SUM_H:
-                rrmovq %r12, %r14
                 rrmovq %rdi, %rdx
+                rrmovq %r12, %r14
                 SUM_W:
                     # move
                     mrmovb (%rdx), %r9
@@ -134,7 +134,6 @@ bmp_mosaic:
                 subq %rbx, %rdi
                 subq %r8, %r13
                 jg SUM_H
-            addq %rbx, %rdi
             # %rax=3, %rbx=bitWidth, %rcx=sum0, %rdx=(decreased)height
             # %rsi=sum1, %rdi=imgPtr, $rbp=sum2, %r8=1,
             # %r9=?, %r10=?, %r11=?, %r12=new_width,
@@ -142,10 +141,13 @@ bmp_mosaic:
             # stack: [rowPointer, size, width, bitWidth*size,
             #         3*size, (decreased)width, new_height
             popq %r13
+            addq %rbx, %rdi
             rrmovq %r13, %r9
             mulq %r12, %r9
+            popq %r11
             divq %r9, %rcx
             divq %r9, %rsi
+            popq %r10
             divq %r9, %rbp
 
             # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
@@ -155,8 +157,8 @@ bmp_mosaic:
             # stack: [rowPointer, size, width, bitWidth*size,
             #         3*size, (decreased)width
             ASSIGN_H:
-                rrmovq %r12, %r14
                 rrmovq %rdi, %rdx
+                rrmovq %r12, %r14
                 ASSIGN_W:
                     rmmovb %rcx, (%rdx)
                     rmmovb %rsi, 1(%rdx)
@@ -167,18 +169,17 @@ bmp_mosaic:
                 addq %rbx, %rdi
                 subq %r8, %r13
                 jg ASSIGN_H
-            subq %rbx, %rdi
             # %rax=3, %rbx=bitWidth, %rcx=mean0, %rdx=(decreased)height
             # %rsi=mean1, %rdi=imgPtr, $rbp=mean2, %r8=1,
             # %r9=?, %r10=?, %r11=?, %r12=new_width,
             # %r13=new_height, %r14=w_counter
             # stack: [rowPointer, size, width, bitWidth*size,
             #         3*size, (decreased)width
-            popq %r11
-            popq %r10
             popq %rbp
+            subq %rbx, %rdi
             popq %rsi
             popq %rcx
+            addq %r10, %rdi
             # %rax=3, %rbx=bitWidth, %rcx=size, %rdx=(decreased)height
             # %rsi=width, %rdi=imgPtr, $rbp=bitWidth*size, %r8=1,
             # %r9=?, %r10=3*size, %r11=(decreased)width, %r12=?
@@ -186,7 +187,6 @@ bmp_mosaic:
             # stack: [rowPointer,
             popq %rdx
 
-            addq %r10, %rdi
             subq %rcx, %r11
             jg LOOP_W
         popq %rdi
